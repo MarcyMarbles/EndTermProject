@@ -1,4 +1,4 @@
-package kz.marcy.endtermproject.Controller;
+package kz.marcy.endtermproject.Repository;
 
 import kz.marcy.endtermproject.Entity.Users;
 import org.springframework.data.domain.Page;
@@ -10,8 +10,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface UserRepo extends MongoRepository<Users, UUID> {
+public interface UserRepo extends MongoRepository<Users, String> {
     Page<Users> findAllByDeletedAtIsNull(Pageable pageable);
     Optional<Users> findByLogin(String login);
-    
+
 }
