@@ -6,11 +6,11 @@ import kz.marcy.endtermproject.Repository.RolesRepo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.Instant;
-import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -26,33 +26,38 @@ public class RolesService extends AbstractSuperService<Roles> {
 
     @PostConstruct
     public void initRoles() {
-        if(areDefaultRolesCreated()){
-            return;
-        }
-        log.info("Initing default roles");
-        defaultRoles.forEach(role -> {
-            if(!rolesRepo.existsByCode(role)){
-                Roles newRole = new Roles();
-                newRole.setName(role);
-                newRole.setCode("ROLE_" + role);
-                newRole.setCreatedAt(Instant.now());
-                newRole.setUpdatedAt(null);
-                newRole.setDeletedAt(null);
-                rolesRepo.save(newRole);
-            }
-        });
+        areDefaultRolesCreated()
+                .filter(created -> !created)
+                .flatMapMany(ignored -> Flux.fromIterable(defaultRoles))
+                .flatMap(role -> rolesRepo.existsByCodeAndDeletedAtIsNull(role)
+                        .filter(exists -> !exists)
+                        .map(exists -> {
+                            Roles newRole = new Roles();
+                            newRole.setName(role);
+                            newRole.setCode("ROLE_" + role);
+                            newRole.setCreatedAt(Instant.now());
+                            return newRole;
+                        })
+                        .flatMap(rolesRepo::save))
+                .subscribe();
     }
 
-    public List<String> getDefaultRoleCodes() {
-        return defaultRoles.stream()
-                .map(role -> "ROLE_" + role)
-                .collect(Collectors.toList());
+    public Flux<String> getDefaultRoleCodes() {
+        return Flux.fromIterable(defaultRoles)
+                .map(role -> "ROLE_" + role);
     }
 
-    public boolean areDefaultRolesCreated() {
-        List<String> defaultRoleCodes = getDefaultRoleCodes();
-        List<Roles> existingRoles = rolesRepo.findRolesByCodeIn(defaultRoleCodes);
-        return existingRoles.size() == defaultRoleCodes.size();
+    public Mono<Boolean> areDefaultRolesCreated() {
+        return getDefaultRoleCodes()
+                .collectList()
+                .flatMap(codes -> rolesRepo.findRolesByCodeInAndDeletedAtIsNull(codes)
+                        .collectList()
+                        .map(existingRoles -> existingRoles.size() == codes.size()));
     }
+
+    public Mono<Roles> findByCode(String code) {
+        return rolesRepo.findByCodeAndDeletedAtIsNull(code);
+    }
+
 
 }

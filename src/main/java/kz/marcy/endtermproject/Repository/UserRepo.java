@@ -1,17 +1,19 @@
 package kz.marcy.endtermproject.Repository;
 
 import kz.marcy.endtermproject.Entity.Users;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.Optional;
-import java.util.UUID;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Repository
-public interface UserRepo extends MongoRepository<Users, String> {
-    Page<Users> findAllByDeletedAtIsNull(Pageable pageable);
-    Optional<Users> findByLogin(String login);
-
+public interface UserRepo extends ReactiveMongoRepository<Users, String> {
+    Flux<Users> findAllByDeletedAtIsNull(Pageable pageable);
+    Mono<Users> findByLogin(String login);
+    @Query("{ deletedAt :  null }")
+    Flux<Users> findAll();
+    @Query("{ deletedAt : { $ne : null } }")
+    Flux<Users> findSoftDeleted();
 }
