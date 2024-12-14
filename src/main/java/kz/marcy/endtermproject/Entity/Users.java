@@ -10,6 +10,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Users extends AbstractSuperClass {
     private String login;
     private String password;
-    private String username; // User can change it anytime he wants
+    private String username;
     private Roles roles;
 }

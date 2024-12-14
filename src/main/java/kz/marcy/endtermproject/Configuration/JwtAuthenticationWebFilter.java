@@ -26,7 +26,6 @@ public class JwtAuthenticationWebFilter implements WebFilter {
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         String authHeader = exchange.getRequest().getHeaders().getFirst("Authorization");
         if (authHeader == null && exchange.getRequest().getURI().getQuery() != null) {
-            // Extract token from query parameter for WebSocket
             String query = exchange.getRequest().getURI().getQuery();
             if (query.startsWith("token=")) {
                 authHeader = "Bearer " + query.substring(6);
