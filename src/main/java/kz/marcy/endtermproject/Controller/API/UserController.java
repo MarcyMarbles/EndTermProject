@@ -4,6 +4,7 @@ import kz.marcy.endtermproject.Entity.Transient.PageWrapper;
 import kz.marcy.endtermproject.Entity.Users;
 import kz.marcy.endtermproject.Service.RolesService;
 import kz.marcy.endtermproject.Service.UserService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -56,6 +57,14 @@ public class UserController {
 
         return userService.updateUser(user)
                 .then(Mono.just(ResponseEntity.ok("User updated successfully")));
+    }
+
+    @DeleteMapping("/deleteUser/{id}")
+    public Mono<ResponseEntity<String>> deleteUser(@PathVariable String id) {
+        return userService.deleteUser(id)
+                .then(Mono.just(ResponseEntity.ok("User deleted successfully")))
+                .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("Error deleting user: " + e.getMessage())));
     }
 
 

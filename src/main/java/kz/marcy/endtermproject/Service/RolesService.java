@@ -59,5 +59,10 @@ public class RolesService extends AbstractSuperService<Roles> {
         return rolesRepo.findByCodeAndDeletedAtIsNull(code);
     }
 
+    @Override
+    public void saveEntity(Roles entity) {
+        rolesRepo.save(entity).subscribe(); // Save the entity reactively
+    }
+
 
 }

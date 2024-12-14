@@ -11,9 +11,15 @@ import reactor.core.publisher.Mono;
 @Repository
 public interface UserRepo extends ReactiveMongoRepository<Users, String> {
     Flux<Users> findAllByDeletedAtIsNull(Pageable pageable);
+
     Mono<Users> findByLogin(String login);
+
+    @Override
     @Query("{ deletedAt :  null }")
     Flux<Users> findAll();
+
     @Query("{ deletedAt : { $ne : null } }")
     Flux<Users> findSoftDeleted();
+
+    Mono<Users> findByIdAndDeletedAtIsNull(String id);
 }

@@ -53,6 +53,11 @@ public class UserService extends AbstractSuperService<Users> {
     }
 
     @Override
+    public void saveEntity(Users entity) {
+        userRepo.save(entity).subscribe(); // Save the entity reactively
+    }
+
+    @Override
     public void softDelete(Users entity) {
         super.softDelete(entity);
         userWebSocketHandler.publishUser(entity, Message.Type.DELETE);
@@ -92,6 +97,13 @@ public class UserService extends AbstractSuperService<Users> {
         return userRepo.findByLogin(login)
                 .map(Users::getRoles)
                 .map(Roles::getCode);
+    }
+
+    public Mono<Void> deleteUser(String id) {
+        return userRepo.findByIdAndDeletedAtIsNull(id)
+                .switchIfEmpty(Mono.error(new RuntimeException("User not found or already deleted")))
+                .flatMap(user -> Mono.fromRunnable(() -> softDelete(user)))
+                .then();
     }
 
 
