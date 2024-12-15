@@ -1,6 +1,6 @@
 package kz.marcy.endtermproject.Configuration;
 
-import kz.marcy.endtermproject.Handlers.UserWebSocketHandler;
+import kz.marcy.endtermproject.WebSocketHandlers.UserWebSocketHandler;
 import kz.marcy.endtermproject.Service.JwtUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;

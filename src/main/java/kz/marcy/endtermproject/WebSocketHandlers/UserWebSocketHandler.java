@@ -1,4 +1,4 @@
-package kz.marcy.endtermproject.Handlers;
+package kz.marcy.endtermproject.WebSocketHandlers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,8 +16,6 @@ import org.springframework.web.reactive.socket.WebSocketMessage;
 import org.springframework.web.reactive.socket.WebSocketSession;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
-
-import java.net.URI;
 
 
 @Controller

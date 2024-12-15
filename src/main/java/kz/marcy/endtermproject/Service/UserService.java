@@ -5,7 +5,7 @@ import kz.marcy.endtermproject.Entity.Transient.Message;
 import kz.marcy.endtermproject.Entity.Transient.PageWrapper;
 import kz.marcy.endtermproject.Entity.Roles;
 import kz.marcy.endtermproject.Entity.Users;
-import kz.marcy.endtermproject.Handlers.UserWebSocketHandler;
+import kz.marcy.endtermproject.WebSocketHandlers.UserWebSocketHandler;
 import kz.marcy.endtermproject.Repository.UserRepo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
