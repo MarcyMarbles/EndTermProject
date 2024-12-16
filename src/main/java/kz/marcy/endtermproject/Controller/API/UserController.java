@@ -43,14 +43,11 @@ public class UserController {
                         return Mono.just(ResponseEntity.badRequest().body("Role not found"));
                     }
                     user.setRoles(role);
+                    user.setPending(true);
                     return userService.saveUser(user)
                             .then(Mono.just(ResponseEntity.ok("User added successfully")));
                 })
-                .defaultIfEmpty(ResponseEntity.badRequest().body("Role not found")) // Handle empty role
-                .doOnSuccess(pendingUser -> {
-                    // Need to send message to the user to confirm the registration
-
-                });
+                .defaultIfEmpty(ResponseEntity.badRequest().body("Role not found"));
     }
 
     @PostMapping("/updateUser")

@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.Instant;
 
@@ -23,18 +24,24 @@ public class UserService extends AbstractSuperService<Users> {
     private final PasswordEncoder passwordEncoder;
     private final RolesService rolesService;
     private final UserWebSocketHandler userWebSocketHandler;
+    private final EmailService emailService;
 
-    public UserService(UserRepo userRepo, PasswordEncoder passwordEncoder, RolesService rolesService, UserWebSocketHandler userWebSocketHandler) {
+    public UserService(UserRepo userRepo, PasswordEncoder passwordEncoder, RolesService rolesService, UserWebSocketHandler userWebSocketHandler, EmailService emailService) {
         this.userRepo = userRepo;
         this.passwordEncoder = passwordEncoder;
         this.rolesService = rolesService;
         this.userWebSocketHandler = userWebSocketHandler;
+        this.emailService = emailService;
     }
 
     public Mono<Users> saveUser(Users user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return userRepo.save(user).doOnSuccess(users -> userWebSocketHandler.publishUser(users, Message.Type.CREATE));
+        return userRepo.save(user)
+                .publishOn(Schedulers.boundedElastic())
+                .doOnSuccess(users -> userWebSocketHandler.publishUser(users, Message.Type.CREATE))
+                .flatMap(users -> emailService.sendConfirmationEmail(users).then(Mono.just(users)));
     }
+
 
     public Mono<Users> updateUser(Users user) {
         return userRepo.findById(user.getId())
@@ -50,7 +57,7 @@ public class UserService extends AbstractSuperService<Users> {
 
     @Override
     public void saveEntity(Users entity) {
-        userRepo.save(entity).subscribe(); // Save the entity reactively
+        userRepo.save(entity).subscribe();
     }
 
     @Override
@@ -76,7 +83,7 @@ public class UserService extends AbstractSuperService<Users> {
     public Mono<Boolean> validateUserByLoginAndPassword(String login, String password) {
         return userRepo.findByLoginAndDeletedAtIsNull(login)
                 .flatMap(user -> {
-                    if (passwordEncoder.matches(password, user.getPassword())) {
+                    if (passwordEncoder.matches(password, user.getPassword()) && !user.isPending()) {
                         return Mono.just(true);
                     } else {
                         return Mono.just(false);
@@ -114,28 +121,13 @@ public class UserService extends AbstractSuperService<Users> {
     public Mono<Boolean> confirmUser(String email) {
         return userRepo.findByEmailAndDeletedAtIsNull(email)
                 .flatMap(user -> {
-                    if (user.isPending()) {
+                    if (!user.isPending()) {
                         return Mono.just(false);
                     } else {
-                        user.setPending(true);
+                        user.setPending(false);
                         return userRepo.save(user).map(Users::isPending);
                     }
                 });
     }
 
-
-    @PostConstruct
-    public void init() {
-        Users user = new Users();
-        user.setLogin("admin");
-        user.setPassword("admin");
-        user.setUsername("admin");
-        rolesService.findByCode("ROLE_ADMIN")
-                .flatMap(role -> {
-                    user.setRoles(role);
-                    return userRepo.findByLoginAndDeletedAtIsNull(user.getLogin())
-                            .switchIfEmpty(saveUser(user));
-                }).subscribe();
-
-    }
 }

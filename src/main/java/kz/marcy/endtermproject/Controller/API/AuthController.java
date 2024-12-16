@@ -51,7 +51,7 @@ public class AuthController {
 
 
     @GetMapping("/confirm")
-    public Mono<ResponseEntity<String>> confirmation(@RequestParam String email, @RequestParam String token) {
+    public Mono<ResponseEntity<String>> confirmation(@RequestParam String token, @RequestParam String email) {
         return userService.findUserByEmail(email)
                 .flatMap(login -> {
                     if (jwtUtils.validateToken(token, login.getLogin())) {

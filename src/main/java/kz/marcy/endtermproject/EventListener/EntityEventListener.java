@@ -2,7 +2,10 @@ package kz.marcy.endtermproject.EventListener;
 
 
 import kz.marcy.endtermproject.Entity.AbstractSuperClass;
+import kz.marcy.endtermproject.Entity.Users;
+import kz.marcy.endtermproject.Service.EmailService;
 import org.springframework.context.ApplicationListener;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.mongodb.core.mapping.event.*;
 import org.springframework.stereotype.Component;
 
@@ -10,6 +13,7 @@ import java.time.Instant;
 
 @Component
 public class EntityEventListener implements ApplicationListener<MongoMappingEvent<?>> {
+
 
     @Override
     public void onApplicationEvent(MongoMappingEvent<?> event) {

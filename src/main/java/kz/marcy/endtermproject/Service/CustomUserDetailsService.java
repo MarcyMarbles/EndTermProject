@@ -16,7 +16,7 @@ public class CustomUserDetailsService implements ReactiveUserDetailsService {
 
     @Override
     public Mono<UserDetails> findByUsername(String username) {
-        return userRepo.findByLogin(username)
+        return userRepo.findByLoginAndDeletedAtIsNull(username)
             .map(user -> User.builder()
                 .username(user.getLogin())
                 .password(user.getPassword())

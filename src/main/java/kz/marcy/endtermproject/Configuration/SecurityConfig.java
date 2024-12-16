@@ -55,6 +55,7 @@ public class SecurityConfig {
                 .addFilterAt(jwtAuthenticationWebFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/api/auth/**").permitAll()
+                        .pathMatchers("/api/register").permitAll()
                         .pathMatchers("/api/users").hasRole("ADMIN")
                         .pathMatchers("/ws/**").authenticated()
                         .pathMatchers("/home").authenticated()
