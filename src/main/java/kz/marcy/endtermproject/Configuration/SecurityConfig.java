@@ -57,6 +57,7 @@ public class SecurityConfig {
                         .pathMatchers("/api/auth/**").permitAll()
                         .pathMatchers("/api/users").hasRole("ADMIN")
                         .pathMatchers("/ws/**").authenticated()
+                        .pathMatchers("/home").authenticated()
                         .anyExchange().authenticated()
                 )
                 .build();

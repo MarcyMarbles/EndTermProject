@@ -2,7 +2,6 @@ package kz.marcy.endtermproject.Service;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import kz.marcy.endtermproject.Entity.Roles;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -12,7 +11,6 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Component
 public class JwtUtils {
@@ -25,9 +23,10 @@ public class JwtUtils {
         this.secretKey = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateToken(String username, String role) {
+    public String generateToken(String username, String role, String id) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", role);
+        claims.put("id", id);
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(username)
@@ -68,9 +67,14 @@ public class JwtUtils {
     }
 
 
+
     public Authentication getAuthentication(String username, String role) {
         GrantedAuthority authority = new SimpleGrantedAuthority(role);
         return new UsernamePasswordAuthenticationToken(username, null, List.of(authority));
+    }
+
+    public String extractId(String token) {
+        return extractClaims(token).get("id", String.class);
     }
 
 

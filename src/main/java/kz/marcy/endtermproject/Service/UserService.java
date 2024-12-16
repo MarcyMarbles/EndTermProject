@@ -31,10 +31,6 @@ public class UserService extends AbstractSuperService<Users> {
         this.userWebSocketHandler = userWebSocketHandler;
     }
 
-    public Mono<Users> findByLogin(String login) {
-        return userRepo.findByLogin(login);
-    }
-
     public Mono<Users> saveUser(Users user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepo.save(user).doOnSuccess(users -> userWebSocketHandler.publishUser(users, Message.Type.CREATE));
@@ -78,7 +74,7 @@ public class UserService extends AbstractSuperService<Users> {
     }
 
     public Mono<Boolean> validateUserByLoginAndPassword(String login, String password) {
-        return userRepo.findByLogin(login)
+        return userRepo.findByLoginAndDeletedAtIsNull(login)
                 .flatMap(user -> {
                     if (passwordEncoder.matches(password, user.getPassword())) {
                         return Mono.just(true);
@@ -94,7 +90,7 @@ public class UserService extends AbstractSuperService<Users> {
     }
 
     public Mono<String> getUserRole(String login) {
-        return userRepo.findByLogin(login)
+        return userRepo.findByLoginAndDeletedAtIsNull(login)
                 .map(Users::getRoles)
                 .map(Roles::getCode);
     }
@@ -104,6 +100,27 @@ public class UserService extends AbstractSuperService<Users> {
                 .switchIfEmpty(Mono.error(new RuntimeException("User not found or already deleted")))
                 .flatMap(user -> Mono.fromRunnable(() -> softDelete(user)))
                 .then();
+    }
+
+    public Mono<String> getUserID(String login) {
+        return userRepo.findByLoginAndDeletedAtIsNull(login)
+                .map(Users::getId);
+    }
+
+    public Mono<Users> findUserByEmail(String email) {
+        return userRepo.findByEmailAndDeletedAtIsNull(email);
+    }
+
+    public Mono<Boolean> confirmUser(String email) {
+        return userRepo.findByEmailAndDeletedAtIsNull(email)
+                .flatMap(user -> {
+                    if (user.isPending()) {
+                        return Mono.just(false);
+                    } else {
+                        user.setPending(true);
+                        return userRepo.save(user).map(Users::isPending);
+                    }
+                });
     }
 
 
@@ -116,7 +133,7 @@ public class UserService extends AbstractSuperService<Users> {
         rolesService.findByCode("ROLE_ADMIN")
                 .flatMap(role -> {
                     user.setRoles(role);
-                    return userRepo.findByLogin(user.getLogin())
+                    return userRepo.findByLoginAndDeletedAtIsNull(user.getLogin())
                             .switchIfEmpty(saveUser(user));
                 }).subscribe();
 

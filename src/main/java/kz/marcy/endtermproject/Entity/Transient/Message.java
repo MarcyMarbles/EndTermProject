@@ -11,12 +11,14 @@ import java.util.List;
 @NoArgsConstructor
 public class Message {
     private String type;
-    private Object data; // When type is "BATCH" this will be a list of messages to be sent
+    private Object data;
+    private Object receivers;
 
     public static class Type {
         public static final String CREATE = "CREATE";
         public static final String UPDATE = "UPDATE";
         public static final String DELETE = "DELETE";
-        public static final String BATCH = "BATCH";
+        public static final String BATCH = "BATCH"; // Ненужная
+
     }
 }

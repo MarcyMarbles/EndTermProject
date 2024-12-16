@@ -31,7 +31,7 @@ public class UserController {
         return userService.findAll(PageWrapper.of(page, size));
     }
 
-    @PostMapping("/addUser")
+    @PostMapping("/register")
     public Mono<ResponseEntity<String>> addUser(@RequestBody Users user) {
         if (user == null || user.getUsername() == null || user.getPassword() == null) {
             return Mono.just(ResponseEntity.badRequest().body("Invalid user input"));
@@ -46,7 +46,11 @@ public class UserController {
                     return userService.saveUser(user)
                             .then(Mono.just(ResponseEntity.ok("User added successfully")));
                 })
-                .defaultIfEmpty(ResponseEntity.badRequest().body("Role not found")); // Handle empty role
+                .defaultIfEmpty(ResponseEntity.badRequest().body("Role not found")) // Handle empty role
+                .doOnSuccess(pendingUser -> {
+                    // Need to send message to the user to confirm the registration
+
+                });
     }
 
     @PostMapping("/updateUser")
