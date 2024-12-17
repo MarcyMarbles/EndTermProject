@@ -48,8 +48,13 @@ public class UserService extends AbstractSuperService<Users> {
                     if (user.getPassword() != null && !user.getPassword().isEmpty()) {
                         existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
                     }
-                    existingUser.setUsername(user.getUsername());
-                    existingUser.setUpdatedAt(Instant.now());
+                    if(user.getAvatar() != null) {
+                        existingUser.setAvatar(user.getAvatar());
+                    }
+                    // Temp email is not changeable
+                    if(user.getUsername() != null && !user.getUsername().isEmpty()) {
+                        existingUser.setUsername(user.getUsername());
+                    }
                     return userRepo.save(existingUser);
                 }).doOnSuccess(users -> userWebSocketHandler.publishUser(users, Message.Type.UPDATE));
     }
