@@ -1,6 +1,8 @@
 package kz.marcy.endtermproject.Controller.API;
 
 import kz.marcy.endtermproject.Service.JwtUtils;
+import kz.marcy.endtermproject.Service.PendingCodes;
+import kz.marcy.endtermproject.Service.PendingService;
 import kz.marcy.endtermproject.Service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,10 +20,12 @@ public class AuthController {
 
     private final UserService userService;
     private final JwtUtils jwtUtils;
+    private final PendingService pendingService;
 
-    public AuthController(JwtUtils jwtUtils, UserService userService) {
+    public AuthController(JwtUtils jwtUtils, UserService userService, PendingService pendingService) {
         this.jwtUtils = jwtUtils;
         this.userService = userService;
+        this.pendingService = pendingService;
     }
 
     @PostMapping("/login")
@@ -50,7 +54,7 @@ public class AuthController {
     }
 
 
-    @GetMapping("/confirm")
+    /*@PostMapping("/confirm")
     public Mono<ResponseEntity<String>> confirmation(@RequestParam String token, @RequestParam String email) {
         return userService.findUserByEmail(email)
                 .flatMap(login -> {
@@ -71,6 +75,21 @@ public class AuthController {
                     }
                 })
                 .switchIfEmpty(Mono.just(ResponseEntity.badRequest().body("User not found")));
+    }*/
+
+    @PostMapping("/confirm")
+    public Mono<ResponseEntity<String>> confirmation(@RequestParam String code) {
+        return pendingService.confirmUser(code)
+                .map(isConfirmed -> {
+                    if (isConfirmed) {
+                        log.info("User confirmed his email");
+                        return ResponseEntity.ok("Email confirmed successfully");
+                    } else {
+                        log.warn("User tried to confirm his email, but he is already confirmed");
+                        return ResponseEntity.badRequest().body("User is already confirmed");
+                    }
+                })
+                .switchIfEmpty(Mono.just(ResponseEntity.badRequest().body("Invalid code")));
     }
 
 

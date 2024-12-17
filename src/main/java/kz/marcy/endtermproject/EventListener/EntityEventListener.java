@@ -4,6 +4,10 @@ package kz.marcy.endtermproject.EventListener;
 import kz.marcy.endtermproject.Entity.AbstractSuperClass;
 import kz.marcy.endtermproject.Entity.Users;
 import kz.marcy.endtermproject.Service.EmailService;
+import kz.marcy.endtermproject.Service.PendingCodes;
+import kz.marcy.endtermproject.Service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.mongodb.core.mapping.event.*;
@@ -14,6 +18,13 @@ import java.time.Instant;
 @Component
 public class EntityEventListener implements ApplicationListener<MongoMappingEvent<?>> {
 
+
+    private static final Logger log = LoggerFactory.getLogger(EntityEventListener.class);
+    private final UserService userService;
+
+    public EntityEventListener(UserService userService) {
+        this.userService = userService;
+    }
 
     @Override
     public void onApplicationEvent(MongoMappingEvent<?> event) {
@@ -35,7 +46,7 @@ public class EntityEventListener implements ApplicationListener<MongoMappingEven
     }
 
     private void handleBeforeConvert(AbstractSuperClass entity) {
-        System.out.println("Before converting document: " + entity);
+        log.info("Before converting document: {}", entity);
         if(entity.getCreatedAt() == null){
             entity.setCreatedAt(Instant.now());
         }else{
@@ -44,18 +55,23 @@ public class EntityEventListener implements ApplicationListener<MongoMappingEven
     }
 
     private void handleBeforeSave(AbstractSuperClass entity) {
-        System.out.println("Before saving document: " + entity);
+        log.info("Before saving document: {}", entity);
     }
 
     private void handleAfterSave(AbstractSuperClass entity) {
-        System.out.println("After saving document: " + entity);
+        log.info("After saving document: {}", entity);
+        if(entity instanceof PendingCodes code){
+            if(code.isUsed()){
+                userService.confirmUser(code).subscribe();
+            }
+        }
     }
 
     private void handleBeforeDelete(AbstractSuperClass entity) {
-        System.out.println("Before deleting document: " + entity);
+        log.info("Before deleting document: {}", entity);
     }
 
     private void handleAfterDelete(AbstractSuperClass entity) {
-        System.out.println("After deleting document: " + entity);
+        log.info("After deleting document: {}", entity);
     }
 }

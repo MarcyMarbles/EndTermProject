@@ -3,6 +3,7 @@ package kz.marcy.endtermproject;
 import kz.marcy.endtermproject.Entity.Users;
 import kz.marcy.endtermproject.Repository.UserRepo;
 import kz.marcy.endtermproject.Service.RolesService;
+import kz.marcy.endtermproject.Service.UserService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -11,10 +12,12 @@ public class DataInitializer implements CommandLineRunner {
 
     private final RolesService rolesService;
     private final UserRepo userRepo;
+    private final UserService userService;
 
-    public DataInitializer(RolesService rolesService, UserRepo userRepo) {
+    public DataInitializer(RolesService rolesService, UserRepo userRepo, UserService userService) {
         this.rolesService = rolesService;
         this.userRepo = userRepo;
+        this.userService = userService;
     }
 
     @Override
@@ -27,7 +30,7 @@ public class DataInitializer implements CommandLineRunner {
                 .flatMap(role -> {
                     user.setRoles(role);
                     return userRepo.findByLoginAndDeletedAtIsNull(user.getLogin())
-                            .switchIfEmpty(userRepo.save(user));
+                            .switchIfEmpty(userService.saveUser(user));
                 }).subscribe();
     }
 }

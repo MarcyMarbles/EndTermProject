@@ -2,6 +2,9 @@ package kz.marcy.endtermproject.Controller.API;
 
 import kz.marcy.endtermproject.Entity.Transient.PageWrapper;
 import kz.marcy.endtermproject.Entity.Users;
+import kz.marcy.endtermproject.Repository.PendingRepo;
+import kz.marcy.endtermproject.Service.PendingCodes;
+import kz.marcy.endtermproject.Service.PendingService;
 import kz.marcy.endtermproject.Service.RolesService;
 import kz.marcy.endtermproject.Service.UserService;
 import org.springframework.http.HttpStatus;
@@ -9,6 +12,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 @RestController
 @RequestMapping("/api")
@@ -18,9 +24,12 @@ public class UserController {
 
     private final RolesService rolesService;
 
-    public UserController(UserService userService, RolesService rolesService) {
+    private final PendingService pendingService;
+
+    public UserController(UserService userService, RolesService rolesService, PendingService pendingService) {
         this.userService = userService;
         this.rolesService = rolesService;
+        this.pendingService = pendingService;
     }
 
     @GetMapping("/users")
@@ -40,12 +49,14 @@ public class UserController {
         return rolesService.findByCode("ROLE_USER")
                 .flatMap(role -> {
                     if (role == null) {
-                        return Mono.just(ResponseEntity.badRequest().body("Role not found"));
+                        return Mono.just(ResponseEntity.badRequest().body("Role 'ROLE_USER' not found. Contact admin."));
                     }
                     user.setRoles(role);
                     user.setPending(true);
-                    return userService.saveUser(user)
-                            .then(Mono.just(ResponseEntity.ok("User added successfully")));
+                    return pendingService.createPendingCode(user)
+                            .flatMap(_ -> userService.saveUser(user)
+                                    .then(Mono.just(ResponseEntity.ok("User registered successfully. Please confirm your email"))));
+
                 })
                 .defaultIfEmpty(ResponseEntity.badRequest().body("Role not found"));
     }

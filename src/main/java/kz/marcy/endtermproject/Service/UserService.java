@@ -22,24 +22,19 @@ public class UserService extends AbstractSuperService<Users> {
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
     private final UserRepo userRepo;
     private final PasswordEncoder passwordEncoder;
-    private final RolesService rolesService;
     private final UserWebSocketHandler userWebSocketHandler;
-    private final EmailService emailService;
 
-    public UserService(UserRepo userRepo, PasswordEncoder passwordEncoder, RolesService rolesService, UserWebSocketHandler userWebSocketHandler, EmailService emailService) {
+    public UserService(UserRepo userRepo, PasswordEncoder passwordEncoder,  UserWebSocketHandler userWebSocketHandler) {
         this.userRepo = userRepo;
         this.passwordEncoder = passwordEncoder;
-        this.rolesService = rolesService;
         this.userWebSocketHandler = userWebSocketHandler;
-        this.emailService = emailService;
     }
 
     public Mono<Users> saveUser(Users user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepo.save(user)
                 .publishOn(Schedulers.boundedElastic())
-                .doOnSuccess(users -> userWebSocketHandler.publishUser(users, Message.Type.CREATE))
-                .flatMap(users -> emailService.sendConfirmationEmail(users).then(Mono.just(users)));
+                .doOnSuccess(users -> userWebSocketHandler.publishUser(users, Message.Type.CREATE));
     }
 
 
@@ -118,8 +113,8 @@ public class UserService extends AbstractSuperService<Users> {
         return userRepo.findByEmailAndDeletedAtIsNull(email);
     }
 
-    public Mono<Boolean> confirmUser(String email) {
-        return userRepo.findByEmailAndDeletedAtIsNull(email)
+    public Mono<Boolean> confirmUser(PendingCodes code) {
+        return userRepo.findByIdAndDeletedAtIsNull(code.getUserId())
                 .flatMap(user -> {
                     if (!user.isPending()) {
                         return Mono.just(false);
