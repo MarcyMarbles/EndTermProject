@@ -20,20 +20,22 @@ public class NewsController {
     }
 
     @GetMapping("/news")
-    public Flux<News> getAllUsers(
+    public Flux<ResponseEntity<News>> getAllNews(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size
     ) {
-        return newsService.findAll(PageWrapper.of(page, size));
+        return newsService.findAll(PageWrapper.of(page, size))
+                .map(ResponseEntity::ok).defaultIfEmpty(ResponseEntity.badRequest().build());
     }
 
-    @GetMapping("/news/user")
-    public Flux<News> getAllNewsByUser(
+    @GetMapping("/news/speciallyForYou")
+    public Flux<ResponseEntity<News>> getAllNewsByUser(
             @RequestParam(value = "userId") String userId,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size
     ) {
-        return newsService.findAllByUser(userId, PageWrapper.of(page, size));
+        return newsService.speciallyForYou(userId, PageWrapper.of(page, size))
+                .map(ResponseEntity::ok).defaultIfEmpty(ResponseEntity.badRequest().build()); // Useless but let's keep it
     }
 
     @PostMapping("/news/post")

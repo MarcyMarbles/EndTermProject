@@ -23,11 +23,15 @@ public class UserService extends AbstractSuperService<Users> {
     private final UserRepo userRepo;
     private final PasswordEncoder passwordEncoder;
     private final UserWebSocketHandler userWebSocketHandler;
+    private final JwtUtils jwtUtils;
+    private final PendingService pendingService;
 
-    public UserService(UserRepo userRepo, PasswordEncoder passwordEncoder,  UserWebSocketHandler userWebSocketHandler) {
+    public UserService(UserRepo userRepo, PasswordEncoder passwordEncoder, UserWebSocketHandler userWebSocketHandler, JwtUtils jwtUtils, PendingService pendingService) {
         this.userRepo = userRepo;
         this.passwordEncoder = passwordEncoder;
         this.userWebSocketHandler = userWebSocketHandler;
+        this.jwtUtils = jwtUtils;
+        this.pendingService = pendingService;
     }
 
     public Mono<Users> saveUser(Users user) {
@@ -78,7 +82,16 @@ public class UserService extends AbstractSuperService<Users> {
     public Mono<Boolean> validateUserByLoginAndPassword(String login, String password) {
         return userRepo.findByLoginAndDeletedAtIsNull(login)
                 .flatMap(user -> {
-                    if (passwordEncoder.matches(password, user.getPassword()) && !user.isPending()) {
+                    if (passwordEncoder.matches(password, user.getPassword())) {
+                        if (user.isPending()) {
+                            return pendingService.findByUserId(user.getId())
+                                    .flatMap(pendingCodes -> {
+                                        if (pendingCodes.getDueDate().isBefore(Instant.now()) && !pendingCodes.isUsed()) {
+                                            return deleteUser(user.getId()).thenReturn(false);
+                                        }
+                                        return Mono.just(false); // User is still pending
+                                    });
+                        }
                         return Mono.just(true);
                     } else {
                         return Mono.just(false);
@@ -123,6 +136,15 @@ public class UserService extends AbstractSuperService<Users> {
                         return userRepo.save(user).map(Users::isPending);
                     }
                 });
+    }
+
+    public Mono<Users> findUserByUsername(String username) {
+        return userRepo.findByUsernameAndDeletedAtIsNull(username);
+    }
+
+    public Mono<Users> findByToken(String token) {
+        return Mono.just(jwtUtils.extractUsername(token))
+                .flatMap(this::findUserByUsername);
     }
 
 }

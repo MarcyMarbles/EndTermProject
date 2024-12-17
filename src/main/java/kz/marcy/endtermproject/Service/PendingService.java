@@ -39,4 +39,8 @@ public class PendingService {
                 });
     }
 
+    public Mono<PendingCodes> findByUserId(String userId){
+        return pendingRepo.findByUserIdAndDeletedAtIsNull(userId);
+    }
+
 }

@@ -10,4 +10,6 @@ import java.time.Instant;
 @Repository
 public interface PendingRepo extends ReactiveMongoRepository<PendingCodes, String> {
     Mono<PendingCodes> findByCodeAndUsedIsFalseAndDueDateAfter(String code, Instant now);
+
+    Mono<PendingCodes> findByUserIdAndDeletedAtIsNull(String userId);
 }

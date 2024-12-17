@@ -28,10 +28,6 @@ public class JwtAuthenticationWebFilter implements WebFilter {
         if (authHeader == null && exchange.getRequest().getURI().getQuery() != null) {
             String query = exchange.getRequest().getURI().getQuery();
             if (query.startsWith("token=")) {
-                if(query.contains("email=")){
-                    query = query.substring(0, query.indexOf("&"));
-                };
-
                 authHeader = "Bearer " + query.substring(6);
             }
         }

@@ -77,8 +77,12 @@ public class AuthController {
                 .switchIfEmpty(Mono.just(ResponseEntity.badRequest().body("User not found")));
     }*/
 
+    private String code(String requestCode){
+        return null;
+    }
+
     @PostMapping("/confirm")
-    public Mono<ResponseEntity<String>> confirmation(@RequestParam String code) {
+    public Mono<ResponseEntity<String>> confirmation(@RequestBody String code) {
         return pendingService.confirmUser(code)
                 .map(isConfirmed -> {
                     if (isConfirmed) {

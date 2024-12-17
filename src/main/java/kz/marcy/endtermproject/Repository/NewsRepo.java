@@ -7,6 +7,8 @@ import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 
+import java.util.List;
+
 @Repository
 public interface NewsRepo extends ReactiveMongoRepository<News, String> {
     @Query("{deletedAt :  null}")
@@ -16,5 +18,7 @@ public interface NewsRepo extends ReactiveMongoRepository<News, String> {
     Flux<News> findSoftDeleted();
 
     Flux<News> findByAuthorIdAndDeletedAtIsNull(String authorId);
+
+    Flux<News> findByAuthorIdIn(List<String> ids);
 
 }
