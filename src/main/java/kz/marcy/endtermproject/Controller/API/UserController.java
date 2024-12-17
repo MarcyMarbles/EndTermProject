@@ -106,7 +106,11 @@ public class UserController {
                                     profileDTO.setNews(newsList);
                                     boolean isSelf = currentUser.getId() != null && currentUser.getId().equals(user.getId());
                                     profileDTO.setSelf(isSelf);
-                                    profileDTO.setFollowing(user.getFriends().contains(currentUser.getId()));
+                                    if(user.getFriends() == null){
+                                        profileDTO.setFollowing(false);
+                                    }else{
+                                        profileDTO.setFollowing(user.getFriends().contains(currentUser.getId()));
+                                    }
                                     return Mono.just(profileDTO);
                                 })))
                 .map(ResponseEntity::ok)
