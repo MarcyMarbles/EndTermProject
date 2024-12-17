@@ -3,6 +3,7 @@ package kz.marcy.endtermproject.Service;
 import kz.marcy.endtermproject.Entity.News;
 import kz.marcy.endtermproject.Entity.Transient.Message;
 import kz.marcy.endtermproject.Entity.Transient.PageWrapper;
+import kz.marcy.endtermproject.Entity.Users;
 import kz.marcy.endtermproject.Repository.FileDescriptorRepo;
 import kz.marcy.endtermproject.Repository.NewsRepo;
 import kz.marcy.endtermproject.Repository.UserRepo;
@@ -50,6 +51,13 @@ public class NewsService extends AbstractSuperService<News> {
 
     public Flux<News> findAll(PageWrapper pageWrapper) {
         return newsRepo.findAll()
+                .skip((long) pageWrapper.getPage() * pageWrapper.getSize())
+                .take(pageWrapper.getSize());
+    }
+
+    public Flux<News> speciallyForYou(String userId, PageWrapper pageWrapper) {
+        return userRepo.findById(userId)
+                .flatMapMany(user -> newsRepo.findByAuthorIdIn(user.getFriends()))
                 .skip((long) pageWrapper.getPage() * pageWrapper.getSize())
                 .take(pageWrapper.getSize());
     }

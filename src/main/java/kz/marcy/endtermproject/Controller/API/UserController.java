@@ -1,20 +1,14 @@
 package kz.marcy.endtermproject.Controller.API;
 
 import kz.marcy.endtermproject.Entity.Transient.PageWrapper;
+import kz.marcy.endtermproject.Entity.Transient.ProfileDTO;
 import kz.marcy.endtermproject.Entity.Users;
-import kz.marcy.endtermproject.Repository.PendingRepo;
-import kz.marcy.endtermproject.Service.PendingCodes;
-import kz.marcy.endtermproject.Service.PendingService;
-import kz.marcy.endtermproject.Service.RolesService;
-import kz.marcy.endtermproject.Service.UserService;
+import kz.marcy.endtermproject.Service.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 
 @RestController
 @RequestMapping("/api")
@@ -25,11 +19,13 @@ public class UserController {
     private final RolesService rolesService;
 
     private final PendingService pendingService;
+    private final NewsService newsService;
 
-    public UserController(UserService userService, RolesService rolesService, PendingService pendingService) {
+    public UserController(UserService userService, RolesService rolesService, PendingService pendingService, NewsService newsService) {
         this.userService = userService;
         this.rolesService = rolesService;
         this.pendingService = pendingService;
+        this.newsService = newsService;
     }
 
     @GetMapping("/users")
@@ -53,8 +49,12 @@ public class UserController {
                     }
                     user.setRoles(role);
                     user.setPending(true);
-                    return pendingService.createPendingCode(user)
+                    /*return pendingService.createPendingCode(user)
                             .flatMap(_ -> userService.saveUser(user)
+                                    .then(Mono.just(ResponseEntity.ok("User registered successfully. Please confirm your email"))));*/
+                    // Reverse since we need to save user first
+                    return userService.saveUser(user)
+                            .flatMap(savedUser -> pendingService.createPendingCode(savedUser)
                                     .then(Mono.just(ResponseEntity.ok("User registered successfully. Please confirm your email"))));
 
                 })
@@ -77,6 +77,40 @@ public class UserController {
                 .then(Mono.just(ResponseEntity.ok("User deleted successfully")))
                 .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body("Error deleting user: " + e.getMessage())));
+    }
+
+    private String extractToken(String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return null;
+        }
+        return authorizationHeader.substring(7);
+    }
+
+    @PostMapping("/user/profile/{username}") // User Accessing someone else profile
+    public Mono<ResponseEntity<ProfileDTO>> getProfile(@PathVariable String username, @RequestHeader("Authorization") String authorizationHeader) {
+        if(username == null || authorizationHeader == null) {
+            return Mono.just(ResponseEntity.badRequest().build());
+        }
+        String token = extractToken(authorizationHeader);
+        if(token == null) {
+            return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+        }
+        return userService.findUserByUsername(username)
+                .flatMap(user -> userService.findByToken(token)
+                        .defaultIfEmpty(new Users())
+                        .flatMap(currentUser -> newsService.findAllByUser(user.getId(), PageWrapper.of(0, 1000))
+                                .collectList()
+                                .flatMap(newsList -> {
+                                    ProfileDTO profileDTO = new ProfileDTO();
+                                    profileDTO.setUser(user);
+                                    profileDTO.setNews(newsList);
+                                    boolean isSelf = currentUser.getId() != null && currentUser.getId().equals(user.getId());
+                                    profileDTO.setSelf(isSelf);
+                                    profileDTO.setFollowing(user.getFriends().contains(currentUser.getId()));
+                                    return Mono.just(profileDTO);
+                                })))
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
 
