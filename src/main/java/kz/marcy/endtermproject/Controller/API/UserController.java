@@ -90,6 +90,19 @@ public class UserController {
         return authorizationHeader.substring(7);
     }
 
+    private String trimToReact(String path) {
+        int index = path.indexOf("assets");
+        if (index == -1) {
+            throw new IllegalArgumentException("The path does not contain 'assets': " + path);
+        }
+        return getRidOfBackslash(path.substring(index));
+    }
+
+    private String getRidOfBackslash(String path) {
+        return path.replace("\\", "/");
+    }
+
+
     @PostMapping("/user/profile/{username}") // User Accessing someone else profile
     public Mono<ResponseEntity<ProfileDTO>> getProfile(@PathVariable String username, @RequestHeader(value = "Authorization",
             required = false) String authorizationHeader) {
@@ -111,6 +124,9 @@ public class UserController {
                                     profileDTO.setNews(newsList);
                                     boolean isSelf = currentUser.getId() != null && currentUser.getId().equals(user.getId());
                                     profileDTO.setSelf(isSelf);
+                                    if (user.getAvatar() != null) {
+                                        profileDTO.setPathToAva(trimToReact(user.getAvatar().getPath()));
+                                    }
                                     if (user.getFriends() == null) {
                                         profileDTO.setFollowing(false);
                                     } else {
