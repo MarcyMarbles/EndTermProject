@@ -68,11 +68,11 @@ public class FileDescriptorService extends AbstractSuperService<FileDescriptor> 
 
 
     public Mono<FileDescriptor> saveFile(FIleDescriptorDTO fIleDescriptorDTO) {
-        if (fIleDescriptorDTO.getUserToken() == null || fIleDescriptorDTO.getFile() == null) {
+        if (fIleDescriptorDTO.getUserId() == null || fIleDescriptorDTO.getFile() == null) {
             return Mono.empty();
         }
 
-        return userService.getUserByLogin(fIleDescriptorDTO.getUserToken())
+        return userService.getUserById(fIleDescriptorDTO.getUserId())
                 .flatMap(userId -> {
                     String path = uploadDir + "/" + userId.getId();
                     File directory = new File(path);

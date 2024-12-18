@@ -1,5 +1,6 @@
 package kz.marcy.endtermproject.Service;
 
+import kz.marcy.endtermproject.Entity.FileDescriptor;
 import kz.marcy.endtermproject.Entity.Transient.Message;
 import kz.marcy.endtermproject.Entity.Transient.PageWrapper;
 import kz.marcy.endtermproject.Entity.Roles;
@@ -38,6 +39,22 @@ public class UserService extends AbstractSuperService<Users> {
         return userRepo.save(user)
                 .publishOn(Schedulers.boundedElastic())
                 .doOnSuccess(users -> userWebSocketHandler.publishUser(users, Message.Type.CREATE));
+    }
+
+    public Mono<Users> setAvatar(Users user, FileDescriptor avatar) {
+        return userRepo.findById(user.getId())
+                .flatMap(existingUser -> {
+                    existingUser.setAvatar(avatar);
+                    return userRepo.save(existingUser);
+                }).doOnSuccess(users -> userWebSocketHandler.publishUser(users, Message.Type.UPDATE));
+    }
+
+    public Mono<Users> setAvatar(String userId, FileDescriptor avatar) {
+        return userRepo.findById(userId)
+                .flatMap(existingUser -> {
+                    existingUser.setAvatar(avatar);
+                    return userRepo.save(existingUser);
+                }).doOnSuccess(users -> userWebSocketHandler.publishUser(users, Message.Type.UPDATE));
     }
 
 
@@ -123,6 +140,10 @@ public class UserService extends AbstractSuperService<Users> {
 
     public Mono<Users> getUserByLogin(String login) {
         return userRepo.findByLoginAndDeletedAtIsNull(login);
+    }
+
+    public Mono<Users> getUserById(String id){
+        return userRepo.findByIdAndDeletedAtIsNull(id);
     }
 
     public Mono<Users> findUserByEmail(String email) {
