@@ -19,16 +19,17 @@ import java.util.Arrays;
 @Service
 public class FileDescriptorService extends AbstractSuperService<FileDescriptor> {
     private static final Logger log = LoggerFactory.getLogger(FileDescriptorService.class);
-    @Autowired
-    private FileDescriptorRepo fileDescriptorRepo;
+    private final FileDescriptorRepo fileDescriptorRepo;
 
-    @Autowired
-    private JwtUtils jwtUtils;
+    private final UserService userService;
 
     @Value("${app.default.upload-dir}")
     private String uploadDir;
-    @Autowired
-    private UserService userService;
+
+    public FileDescriptorService(FileDescriptorRepo fileDescriptorRepo, UserService userService) {
+        this.fileDescriptorRepo = fileDescriptorRepo;
+        this.userService = userService;
+    }
 
     @Override
     public void saveEntity(FileDescriptor entity) {

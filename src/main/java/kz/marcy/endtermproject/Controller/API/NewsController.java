@@ -21,26 +21,32 @@ public class NewsController {
     }
 
     @GetMapping("/news")
-    public Flux<ResponseEntity<News>> getAllNews(
+    public Mono<ResponseEntity<List<News>>> getAllNews(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size
     ) {
         return newsService.findAll(PageWrapper.of(page, size))
-                .map(ResponseEntity::ok).defaultIfEmpty(ResponseEntity.badRequest().build());
+                .collectList()
+                .map(newsList -> newsList.isEmpty()
+                        ? ResponseEntity.noContent().build()
+                        : ResponseEntity.ok(newsList));
     }
 
     @GetMapping("/news/speciallyForYou")
-    public Flux<ResponseEntity<News>> getAllNewsByUser(
+    public Mono<ResponseEntity<List<News>>> getAllNewsByUser(
             @RequestParam(value = "userId") String userId,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size
     ) {
         return newsService.speciallyForYou(userId, PageWrapper.of(page, size))
-                .map(ResponseEntity::ok).defaultIfEmpty(ResponseEntity.badRequest().build()); // Useless but let's keep it
+                .collectList()
+                .map(newsList -> newsList.isEmpty()
+                        ? ResponseEntity.noContent().build()
+                        : ResponseEntity.ok(newsList));
     }
 
     @PostMapping("/news/post")
-    public Mono<ResponseEntity<News>> addNews(@RequestBody News news,@RequestBody String userId, @RequestBody List<String> paths) {
+    public Mono<ResponseEntity<News>> addNews(@RequestBody News news, @RequestBody String userId, @RequestBody List<String> paths) {
         if (news == null || news.getContent() == null) {
             return Mono.just(ResponseEntity.badRequest().body(null));
         }
