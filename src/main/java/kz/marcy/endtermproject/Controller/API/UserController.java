@@ -87,7 +87,8 @@ public class UserController {
     }
 
     @PostMapping("/user/profile/{username}") // User Accessing someone else profile
-    public Mono<ResponseEntity<ProfileDTO>> getProfile(@PathVariable String username, @RequestHeader("Authorization") String authorizationHeader) {
+    public Mono<ResponseEntity<ProfileDTO>> getProfile(@PathVariable String username, @RequestHeader(value = "Authorization",
+            required = false) String authorizationHeader) {
         if(username == null || authorizationHeader == null) {
             return Mono.just(ResponseEntity.badRequest().build());
         }

@@ -56,6 +56,7 @@ public class SecurityConfig {
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/api/auth/**").permitAll()
                         .pathMatchers("/api/register").permitAll()
+                        .pathMatchers("/api/user/profile/**").permitAll()
                         .pathMatchers("/api/users").hasRole("ADMIN")
                         .pathMatchers("/ws/**").authenticated()
                         .pathMatchers("/home").authenticated()

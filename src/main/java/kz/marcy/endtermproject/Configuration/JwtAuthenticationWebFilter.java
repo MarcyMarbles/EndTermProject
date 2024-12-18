@@ -2,12 +2,10 @@ package kz.marcy.endtermproject.Configuration;
 
 import kz.marcy.endtermproject.Service.JwtUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
@@ -36,7 +34,7 @@ public class JwtAuthenticationWebFilter implements WebFilter {
             String token = authHeader.substring(7);
 
             try {
-                String username = jwtUtils.extractUsername(token);
+                String username = jwtUtils.extractLogin(token);
 
                 if (jwtUtils.validateToken(token, username)) {
                     String roles = jwtUtils.extractRoles(token);

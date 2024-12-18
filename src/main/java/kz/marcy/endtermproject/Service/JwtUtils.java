@@ -23,13 +23,14 @@ public class JwtUtils {
         this.secretKey = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateToken(String username, String role, String id) {
+    public String generateToken(String login, String role, String id, String username) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", role);
         claims.put("id", id);
+        claims.put("username", username);
         return Jwts.builder()
                 .setClaims(claims)
-                .setSubject(username)
+                .setSubject(login)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(secretKey, SignatureAlgorithm.HS256)
@@ -39,7 +40,7 @@ public class JwtUtils {
 
     public boolean validateToken(String token, String username) {
         try {
-            final String extractedUsername = extractUsername(token);
+            final String extractedUsername = extractLogin(token);
             return extractedUsername.equals(username) && !isTokenExpired(token);
         } catch (ExpiredJwtException e) {
             System.err.println("Token expired: " + e.getMessage());
@@ -57,8 +58,12 @@ public class JwtUtils {
     }
 
     // Extract Username
-    public String extractUsername(String token) {
+    public String extractLogin(String token) {
         return extractClaims(token).getSubject();
+    }
+
+    public String extractUsername(String token) {
+        return extractClaims(token).get("username", String.class);
     }
 
     // Extract Roles

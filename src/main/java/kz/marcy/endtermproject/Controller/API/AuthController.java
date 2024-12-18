@@ -1,7 +1,6 @@
 package kz.marcy.endtermproject.Controller.API;
 
 import kz.marcy.endtermproject.Service.JwtUtils;
-import kz.marcy.endtermproject.Service.PendingCodes;
 import kz.marcy.endtermproject.Service.PendingService;
 import kz.marcy.endtermproject.Service.UserService;
 import lombok.AllArgsConstructor;
@@ -35,22 +34,22 @@ public class AuthController {
                     if (!isValid) {
                         log.warn("Invalid login attempt for user: {}", loginRequest.getLogin());
                         return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                                .body(new AuthResponse("Invalid login credentials", null, null)));
+                                .body(new AuthResponse("Invalid login credentials", null, null, null)));
                     }
 
                     // Fetch role and userId after validation
                     return userService.getUserRole(loginRequest.getLogin())
-                            .flatMap(role -> userService.getUserID(loginRequest.getLogin())
+                            .flatMap(role -> userService.getUserByLogin(loginRequest.getLogin())
                                     .flatMap(userId -> {
-                                        String token = jwtUtils.generateToken(loginRequest.getLogin(), role, userId);
+                                        String token = jwtUtils.generateToken(loginRequest.getLogin(), role, userId.getId(), userId.getUsername());
                                         log.info("User {} logged in successfully with role {} and id {}",
                                                 loginRequest.getLogin(), role, userId);
-                                        return Mono.just(ResponseEntity.ok(new AuthResponse(token, role, userId)));
+                                        return Mono.just(ResponseEntity.ok(new AuthResponse(token, role, userId.getId(), userId.getUsername() )));
                                     })
                             );
                 })
                 .switchIfEmpty(Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(new AuthResponse("User not found or invalid credentials", null, null))));
+                        .body(new AuthResponse("User not found or invalid credentials", null, null, null))));
     }
 
 
@@ -96,6 +95,12 @@ public class AuthController {
                 .switchIfEmpty(Mono.just(ResponseEntity.badRequest().body("Invalid code")));
     }
 
+    @GetMapping("/validate")
+    public Mono<ResponseEntity<Boolean>> validate(@RequestParam String token, @RequestParam String username) {
+        return Mono.just(jwtUtils.validateToken(token, username))
+                .map(ResponseEntity::ok);
+    }
+
 
 }
 
@@ -114,4 +119,5 @@ class AuthResponse {
     private String token;
     private String role;
     private String id;
+    private String username;
 }

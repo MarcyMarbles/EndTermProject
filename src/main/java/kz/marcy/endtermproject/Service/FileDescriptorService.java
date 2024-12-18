@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 public class FileDescriptorService extends AbstractSuperService<FileDescriptor> {
@@ -73,9 +72,9 @@ public class FileDescriptorService extends AbstractSuperService<FileDescriptor> 
             return Mono.empty();
         }
 
-        return userService.getUserID(fIleDescriptorDTO.getUserToken())
+        return userService.getUserByLogin(fIleDescriptorDTO.getUserToken())
                 .flatMap(userId -> {
-                    String path = uploadDir + "/" + userId;
+                    String path = uploadDir + "/" + userId.getId();
                     File directory = new File(path);
 
                     if (directory.mkdirs()) {
@@ -91,7 +90,7 @@ public class FileDescriptorService extends AbstractSuperService<FileDescriptor> 
 
                     FileDescriptor fileDescriptor = new FileDescriptor();
                     fileDescriptor.setPath(newPath);
-                    fileDescriptor.setUserId(userId);
+                    fileDescriptor.setUserId(userId.getId());
                     fileDescriptor.setName(fIleDescriptorDTO.getName());
                     fileDescriptor.setType(fIleDescriptorDTO.getType());
                     fileDescriptor.setSize(file.getTotalSpace());

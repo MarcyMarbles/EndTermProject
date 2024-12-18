@@ -1,6 +1,5 @@
 package kz.marcy.endtermproject.Service;
 
-import jakarta.annotation.PostConstruct;
 import kz.marcy.endtermproject.Entity.Transient.Message;
 import kz.marcy.endtermproject.Entity.Transient.PageWrapper;
 import kz.marcy.endtermproject.Entity.Roles;
@@ -122,9 +121,8 @@ public class UserService extends AbstractSuperService<Users> {
                 .then();
     }
 
-    public Mono<String> getUserID(String login) {
-        return userRepo.findByLoginAndDeletedAtIsNull(login)
-                .map(Users::getId);
+    public Mono<Users> getUserByLogin(String login) {
+        return userRepo.findByLoginAndDeletedAtIsNull(login);
     }
 
     public Mono<Users> findUserByEmail(String email) {
@@ -148,7 +146,7 @@ public class UserService extends AbstractSuperService<Users> {
     }
 
     public Mono<Users> findByToken(String token) {
-        return Mono.just(jwtUtils.extractUsername(token))
+        return Mono.just(jwtUtils.extractLogin(token))
                 .flatMap(this::findUserByUsername);
     }
 
