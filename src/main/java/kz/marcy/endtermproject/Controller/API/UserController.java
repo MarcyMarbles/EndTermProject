@@ -1,5 +1,6 @@
 package kz.marcy.endtermproject.Controller.API;
 
+import kz.marcy.endtermproject.Entity.Transient.FriendsDTO;
 import kz.marcy.endtermproject.Entity.Transient.PageWrapper;
 import kz.marcy.endtermproject.Entity.Transient.ProfileDTO;
 import kz.marcy.endtermproject.Entity.Users;
@@ -9,6 +10,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -89,11 +93,11 @@ public class UserController {
     @PostMapping("/user/profile/{username}") // User Accessing someone else profile
     public Mono<ResponseEntity<ProfileDTO>> getProfile(@PathVariable String username, @RequestHeader(value = "Authorization",
             required = false) String authorizationHeader) {
-        if(username == null || authorizationHeader == null) {
+        if (username == null || authorizationHeader == null) {
             return Mono.just(ResponseEntity.badRequest().build());
         }
         String token = extractToken(authorizationHeader);
-        if(token == null) {
+        if (token == null) {
             return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
         }
         return userService.findUserByUsername(username)
@@ -107,15 +111,40 @@ public class UserController {
                                     profileDTO.setNews(newsList);
                                     boolean isSelf = currentUser.getId() != null && currentUser.getId().equals(user.getId());
                                     profileDTO.setSelf(isSelf);
-                                    if(user.getFriends() == null){
+                                    if (user.getFriends() == null) {
                                         profileDTO.setFollowing(false);
-                                    }else{
+                                    } else {
                                         profileDTO.setFollowing(user.getFriends().contains(currentUser.getId()));
                                     }
                                     return Mono.just(profileDTO);
                                 })))
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/friends/find")
+    public Mono<ResponseEntity<Flux<FriendsDTO>>> findUser(@RequestParam String username, @RequestHeader("userId") String userId) {
+        return userService.findUsersWithAlikeUsername(username)
+                .filter(foundUser -> !foundUser.getId().equals(userId))
+                .map(foundUser -> {
+                    FriendsDTO friendsDTO = new FriendsDTO();
+                    friendsDTO.setUser(foundUser);
+
+                    if (foundUser.getFriends() == null) {
+                        foundUser.setFriends(new ArrayList<>());
+                    }
+
+                    friendsDTO.setFriend(foundUser.getFriends().contains(userId));
+                    return friendsDTO;
+                })
+                .collectList()
+                .map(friendsList -> {
+                    if (friendsList.isEmpty()) {
+                        return ResponseEntity.notFound().build();
+                    } else {
+                        return ResponseEntity.ok(Flux.fromIterable(friendsList));
+                    }
+                });
     }
 
 

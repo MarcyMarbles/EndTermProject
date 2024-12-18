@@ -166,6 +166,10 @@ public class UserService extends AbstractSuperService<Users> {
         return userRepo.findByUsernameAndDeletedAtIsNull(username);
     }
 
+    public Flux<Users> findUsersWithAlikeUsername(String username){
+        return userRepo.findByUsernameIsLikeIgnoreCaseAndDeletedAtIsNull(username);
+    }
+
     public Mono<Users> findByToken(String token) {
         return Mono.just(jwtUtils.extractLogin(token))
                 .flatMap(this::findUserByUsername);

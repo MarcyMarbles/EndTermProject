@@ -26,4 +26,5 @@ public interface UserRepo extends ReactiveMongoRepository<Users, String> {
     Mono<Users> findByEmailAndDeletedAtIsNull(String email);
 
     Mono<Users> findByUsernameAndDeletedAtIsNull(String username);
+    Flux<Users> findByUsernameIsLikeIgnoreCaseAndDeletedAtIsNull(String username);
 }

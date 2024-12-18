@@ -4,6 +4,7 @@ import kz.marcy.endtermproject.Entity.News;
 import kz.marcy.endtermproject.Entity.Transient.NewsPostDTO;
 import kz.marcy.endtermproject.Entity.Transient.PageWrapper;
 import kz.marcy.endtermproject.Service.NewsService;
+import org.eclipse.angus.mail.iap.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -57,5 +58,10 @@ public class NewsController {
         return newsService.saveNews(news.getNewsDTO(), userId, List.of(news.getIds()))
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.badRequest().body(null));
+    }
+
+    @PostMapping("/news/like/{id}")
+    public Mono<ResponseEntity<News>> like(@RequestHeader("userId") String userId, @PathVariable String id){
+        return null;
     }
 }
