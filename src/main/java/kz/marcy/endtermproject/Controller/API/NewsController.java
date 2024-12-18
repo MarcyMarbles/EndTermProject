@@ -1,6 +1,7 @@
 package kz.marcy.endtermproject.Controller.API;
 
 import kz.marcy.endtermproject.Entity.News;
+import kz.marcy.endtermproject.Entity.Transient.NewsPostDTO;
 import kz.marcy.endtermproject.Entity.Transient.PageWrapper;
 import kz.marcy.endtermproject.Service.NewsService;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -46,12 +48,13 @@ public class NewsController {
     }
 
     @PostMapping("/news/post")
-    public Mono<ResponseEntity<News>> addNews(@RequestBody News news, @RequestBody String userId, @RequestBody List<String> paths) {
-        if (news == null || news.getContent() == null) {
+    public Mono<ResponseEntity<News>> addNews(@RequestBody NewsPostDTO news,
+                                              @RequestHeader("userId") String userId) {
+        if (news == null || news.getNewsDTO() == null || news.getNewsDTO().getContent() == null) {
             return Mono.just(ResponseEntity.badRequest().body(null));
         }
 
-        return newsService.saveNews(news, userId, paths)
+        return newsService.saveNews(news.getNewsDTO(), userId, List.of(news.getIds()))
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.badRequest().body(null));
     }

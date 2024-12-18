@@ -82,7 +82,7 @@ public class FileDescriptorService extends AbstractSuperService<FileDescriptor> 
                         log.info("Directory created: {}", path);
                     }
 
-                    File file = new File(directory, fIleDescriptorDTO.getName());
+                    File file = new File(directory, fIleDescriptorDTO.getName() + "." + fIleDescriptorDTO.getExtension());
                     String newPath = saveFileToDisk(fIleDescriptorDTO.getFile(), file.getAbsolutePath());
 
                     if (newPath == null) {

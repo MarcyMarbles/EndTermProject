@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -24,12 +25,14 @@ public class NewsService extends AbstractSuperService<News> {
     private final NewsWebSocketHandler newsWebSocketHandler;
     private final FileDescriptorRepo fileDescriptorRepo;
     private final UserRepo userRepo;
+    private final UserService userService;
 
-    public NewsService(NewsRepo newsRepo, NewsWebSocketHandler newsWebSocketHandler, FileDescriptorRepo fileDescriptorRepo, UserRepo userRepo) {
+    public NewsService(NewsRepo newsRepo, NewsWebSocketHandler newsWebSocketHandler, FileDescriptorRepo fileDescriptorRepo, UserRepo userRepo, UserService userService) {
         this.newsRepo = newsRepo;
         this.newsWebSocketHandler = newsWebSocketHandler;
         this.fileDescriptorRepo = fileDescriptorRepo;
         this.userRepo = userRepo;
+        this.userService = userService;
     }
 
     @Override
@@ -71,11 +74,17 @@ public class NewsService extends AbstractSuperService<News> {
 
     public Mono<News> saveNews(News news, String userId, List<String> paths) {
         return Flux.fromIterable(paths)
-                .flatMap(fileDescriptorRepo::findByPathAndDeletedAtIsNull)
+                .flatMap(fileDescriptorRepo::findAllByIdAndDeletedAtIsNull)
                 .collectList()
                 .flatMap(fileDescriptors -> {
+                    if(news.getAttachments() == null){
+                        news.setAttachments(new ArrayList<>());
+                    }
                     news.getAttachments().addAll(fileDescriptors);
-                    return newsRepo.save(news);
+                    return userService.getUserById(userId).flatMap(user -> {
+                        news.setAuthor(user);
+                        return newsRepo.save(news);
+                    });
                 }).flatMap(savedNews ->
                         userRepo.findById(userId).map(user -> {
                             savedNews.setAuthor(user);
