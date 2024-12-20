@@ -106,13 +106,10 @@ public class UserController {
     @PostMapping("/user/profile/{username}") // User Accessing someone else profile
     public Mono<ResponseEntity<ProfileDTO>> getProfile(@PathVariable String username, @RequestHeader(value = "Authorization",
             required = false) String authorizationHeader) {
-        if (username == null || authorizationHeader == null) {
+        if (username == null) {
             return Mono.just(ResponseEntity.badRequest().build());
         }
         String token = extractToken(authorizationHeader);
-        if (token == null) {
-            return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
-        }
         return userService.findUserByUsername(username)
                 .flatMap(user -> userService.findByToken(token)
                         .defaultIfEmpty(new Users())
@@ -124,9 +121,6 @@ public class UserController {
                                     profileDTO.setNews(newsList);
                                     boolean isSelf = currentUser.getId() != null && currentUser.getId().equals(user.getId());
                                     profileDTO.setSelf(isSelf);
-                                    if (user.getAvatar() != null) {
-                                        profileDTO.setPathToAva(trimToReact(user.getAvatar().getPath()));
-                                    }
                                     if (user.getFriends() == null) {
                                         profileDTO.setFollowing(false);
                                     } else {

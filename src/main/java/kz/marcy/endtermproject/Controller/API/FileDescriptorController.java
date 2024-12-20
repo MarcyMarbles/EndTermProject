@@ -4,6 +4,7 @@ import kz.marcy.endtermproject.Entity.FileDescriptor;
 import kz.marcy.endtermproject.Entity.Transient.FIleDescriptorDTO;
 import kz.marcy.endtermproject.Service.FileDescriptorService;
 import kz.marcy.endtermproject.Service.UserService;
+import org.springframework.core.io.Resource;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -52,6 +53,16 @@ public class FileDescriptorController {
                     }
                 })
                 .onErrorResume(MultipartException.class, ex -> Mono.just(ResponseEntity.badRequest().build()));
+    }
+
+    @GetMapping("/files/users/{userId}/{filename}")
+    public Mono<ResponseEntity<Resource>> getFile(
+            @PathVariable String userId,
+            @PathVariable String filename) {
+        Resource file = fileDescriptorService.getFile(userId, filename);
+        return Mono.just(ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(file));
     }
 
 

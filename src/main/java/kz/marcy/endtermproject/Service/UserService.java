@@ -171,6 +171,9 @@ public class UserService extends AbstractSuperService<Users> {
     }
 
     public Mono<Users> findByToken(String token) {
+        if(token == null) {
+            return Mono.empty();
+        }
         return Mono.just(jwtUtils.extractLogin(token))
                 .flatMap(this::findUserByUsername);
     }
