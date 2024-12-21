@@ -126,7 +126,7 @@ public class NewsController {
         if (newsId == null || userId == null) {
             return Mono.just(ResponseEntity.badRequest().body(null));
         }
-        return newsService.like(newsId, userId)
+        return newsService.like(userId, newsId)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.badRequest().body(null));
     }

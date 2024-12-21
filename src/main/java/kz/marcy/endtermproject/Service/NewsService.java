@@ -93,19 +93,18 @@ public class NewsService extends AbstractSuperService<News> {
     }
 
     public Mono<News> like(String userId, String newsId) {
-        return userService.getUserById(userId)
-                .flatMap(user -> newsRepo.findById(newsId)
-                        .flatMap(news -> {
-                            if (news.getLikes() == null) {
-                                news.setLikes(new ArrayList<>());
-                            }
-                            if (news.getLikes().contains(user)) {
-                                news.getLikes().remove(user);
-                            } else {
-                                news.getLikes().add(user);
-                            }
-                            return newsRepo.save(news);
-                        }));
+        return newsRepo.findByIdAndDeletedAtIsNull(newsId)
+                .flatMap(news -> {
+                    if (news.getLikes() == null) {
+                        news.setLikes(new ArrayList<>());
+                    }
+                    if (news.getLikes().contains(userId)) {
+                        news.getLikes().remove(userId);
+                    } else {
+                        news.getLikes().add(userId);
+                    }
+                    return newsRepo.save(news);
+                }).doOnSuccess(news -> newsWebSocketHandler.publishNews(news, Message.Type.UPDATE));
     }
 
     public Flux<News> findByAuthorId(String authorId) {
