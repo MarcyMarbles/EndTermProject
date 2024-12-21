@@ -3,7 +3,6 @@ package kz.marcy.endtermproject.Service;
 import kz.marcy.endtermproject.Entity.News;
 import kz.marcy.endtermproject.Entity.Transient.Message;
 import kz.marcy.endtermproject.Entity.Transient.PageWrapper;
-import kz.marcy.endtermproject.Entity.Users;
 import kz.marcy.endtermproject.Repository.FileDescriptorRepo;
 import kz.marcy.endtermproject.Repository.NewsRepo;
 import kz.marcy.endtermproject.Repository.UserRepo;
@@ -77,7 +76,7 @@ public class NewsService extends AbstractSuperService<News> {
                 .flatMap(fileDescriptorRepo::findAllByIdAndDeletedAtIsNull)
                 .collectList()
                 .flatMap(fileDescriptors -> {
-                    if(news.getAttachments() == null){
+                    if (news.getAttachments() == null) {
                         news.setAttachments(new ArrayList<>());
                     }
                     news.getAttachments().addAll(fileDescriptors);
@@ -93,5 +92,27 @@ public class NewsService extends AbstractSuperService<News> {
                 .doOnSuccess(savedNews -> newsWebSocketHandler.publishNews(savedNews, Message.Type.CREATE));
     }
 
+    public Mono<News> like(String userId, String newsId) {
+        return userService.getUserById(userId)
+                .flatMap(user -> newsRepo.findById(newsId)
+                        .flatMap(news -> {
+                            if (news.getLikes() == null) {
+                                news.setLikes(new ArrayList<>());
+                            }
+                            if (news.getLikes().contains(user)) {
+                                news.getLikes().remove(user);
+                            } else {
+                                news.getLikes().add(user);
+                            }
+                            return newsRepo.save(news);
+                        }));
+    }
 
+    public Flux<News> findByAuthorId(String authorId) {
+        return newsRepo.findByAuthorIdAndDeletedAtIsNull(authorId);
+    }
+
+    public Mono<News> findById(String newsId){
+        return newsRepo.findByIdAndDeletedAtIsNull(newsId);
+    }
 }

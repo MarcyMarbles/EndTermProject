@@ -1,16 +1,15 @@
 package kz.marcy.endtermproject.Controller.API;
 
+import kz.marcy.endtermproject.Entity.Comments;
 import kz.marcy.endtermproject.Entity.News;
 import kz.marcy.endtermproject.Entity.Transient.NewsPostDTO;
 import kz.marcy.endtermproject.Entity.Transient.PageWrapper;
 import kz.marcy.endtermproject.Service.NewsService;
-import org.eclipse.angus.mail.iap.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -60,8 +59,75 @@ public class NewsController {
                 .defaultIfEmpty(ResponseEntity.badRequest().body(null));
     }
 
-    @PostMapping("/news/like/{id}")
-    public Mono<ResponseEntity<News>> like(@RequestHeader("userId") String userId, @PathVariable String id){
-        return null;
+    @GetMapping("/news/{newsId}")
+    public Mono<ResponseEntity<News>> getNewsById(@PathVariable String newsId) {
+        if (newsId == null) {
+            return Mono.just(ResponseEntity.badRequest().body(null));
+        }
+        return newsService.findById(newsId)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.badRequest().body(null));
+    }
+
+/*
+    @GetMapping("/news/{newsId}/comments")
+    public Mono<ResponseEntity<List<Comments>>> getComments(@PathVariable String newsId) {
+        if (newsId == null) {
+            return Mono.just(ResponseEntity.badRequest().body(null));
+        }
+        return newsService.getComments(newsId)
+                .collectList()
+                .map(comments -> comments.isEmpty()
+                        ? ResponseEntity.noContent().build()
+                        : ResponseEntity.ok(comments));
+    }
+
+    @PostMapping("/news/{newsId}/comment")
+    public Mono<ResponseEntity<Comments>> addComment(@RequestHeader("userId") String userId,
+                                                     @PathVariable String newsId,
+                                                     @RequestBody Comments comment) {
+        if (newsId == null || userId == null || comment == null || comment.getContent() == null) {
+            return Mono.just(ResponseEntity.badRequest().body(null));
+        }
+        return newsService.addComment(newsId, userId, comment)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.badRequest().body(null));
+    }
+
+    @DeleteMapping("/news/{newsId}/comment/{commentId}")
+    public Mono<ResponseEntity<Comments>> deleteComment(@RequestHeader("userId") String userId,
+                                                        @PathVariable String newsId,
+                                                        @PathVariable String commentId) {
+        if (newsId == null || userId == null || commentId == null) {
+            return Mono.just(ResponseEntity.badRequest().body(null));
+        }
+        return newsService.deleteComment(newsId, userId, commentId)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.badRequest().body(null));
+    }
+*/
+
+    @GetMapping("/news/{authorId}")
+    public Mono<ResponseEntity<List<News>>> getNewsByAuthor(@PathVariable String authorId) {
+        if (authorId == null) {
+            return Mono.just(ResponseEntity.badRequest().body(null));
+        }
+        return newsService.findByAuthorId(authorId)
+                .collectList()
+                .map(newsList -> newsList.isEmpty()
+                        ? ResponseEntity.noContent().build()
+                        : ResponseEntity.ok((newsList)));
+    }
+
+
+    @PostMapping("/news/{newsId}/like")
+    public Mono<ResponseEntity<News>> like(@RequestHeader("userId") String userId,
+                                           @PathVariable String newsId) {
+        if (newsId == null || userId == null) {
+            return Mono.just(ResponseEntity.badRequest().body(null));
+        }
+        return newsService.like(newsId, userId)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.badRequest().body(null));
     }
 }
