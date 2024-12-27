@@ -76,8 +76,8 @@ public class UserService extends AbstractSuperService<Users> {
     }
 
     @Override
-    public void saveEntity(Users entity) {
-        userRepo.save(entity).subscribe();
+    public Mono<Users> saveEntity(Users entity) {
+        return userRepo.save(entity);
     }
 
     @Override

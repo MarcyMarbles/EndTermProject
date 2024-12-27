@@ -1,8 +1,8 @@
 package kz.marcy.endtermproject.Configuration;
 
+import kz.marcy.endtermproject.WebSocketHandlers.CommentWebSocketHandler;
 import kz.marcy.endtermproject.WebSocketHandlers.NewsWebSocketHandler;
 import kz.marcy.endtermproject.WebSocketHandlers.UserWebSocketHandler;
-import kz.marcy.endtermproject.Service.JwtUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,10 +16,13 @@ import java.util.Map;
 @Configuration
 public class WebSocketConfig {
     @Bean
-    public HandlerMapping webSocketMapping(UserWebSocketHandler userWebSocketHandler, NewsWebSocketHandler newsWebSocketHandler) {
+    public HandlerMapping webSocketMapping(UserWebSocketHandler userWebSocketHandler,
+                                           NewsWebSocketHandler newsWebSocketHandler,
+                                           CommentWebSocketHandler commentWebSocketHandler) {
         Map<String, Object> handlerMap = Map.of(
                 "/ws/users", userWebSocketHandler,
-                "/ws/news", newsWebSocketHandler
+                "/ws/news", newsWebSocketHandler,
+                "/ws/comments", commentWebSocketHandler
         );
         SimpleUrlHandlerMapping mapping = new SimpleUrlHandlerMapping();
         mapping.setOrder(10);
@@ -36,8 +39,4 @@ public class WebSocketConfig {
         return new WebSocketHandlerAdapter();
     }
 
-    @Bean
-    public UserWebSocketHandler userWebSocketHandler(JwtUtils jwtUtils) {
-        return new UserWebSocketHandler(jwtUtils);
-    }
 }

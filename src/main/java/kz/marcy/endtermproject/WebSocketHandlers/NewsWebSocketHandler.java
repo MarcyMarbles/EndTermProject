@@ -5,8 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import kz.marcy.endtermproject.Entity.News;
 import kz.marcy.endtermproject.Entity.Transient.Message;
-import kz.marcy.endtermproject.Repository.UserRepo;
-import kz.marcy.endtermproject.Service.JwtUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
@@ -23,16 +21,11 @@ public class NewsWebSocketHandler implements WebSocketHandler {
 
     private static final Logger log = LoggerFactory.getLogger(NewsWebSocketHandler.class);
 
-    private final UserRepo userRepository;
-    private final JwtUtils jwtUtils;
-
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final Sinks.Many<String> newsSink = Sinks.many().multicast().onBackpressureBuffer();
 
-    public NewsWebSocketHandler(JwtUtils jwtUtils, UserRepo userRepository) {
-        this.jwtUtils = jwtUtils;
-        this.userRepository = userRepository;
+    public NewsWebSocketHandler() {
         objectMapper.registerModule(new JavaTimeModule());
     }
 

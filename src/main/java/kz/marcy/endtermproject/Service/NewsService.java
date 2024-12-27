@@ -35,8 +35,8 @@ public class NewsService extends AbstractSuperService<News> {
     }
 
     @Override
-    public void saveEntity(News entity) {
-        newsRepo.save(entity).subscribe();
+    public Mono<News> saveEntity(News entity) {
+        return newsRepo.save(entity);
     }
 
     @Override
@@ -104,7 +104,7 @@ public class NewsService extends AbstractSuperService<News> {
                         news.getLikes().add(userId);
                     }
                     return newsRepo.save(news);
-                }).doOnSuccess(news -> newsWebSocketHandler.publishNews(news, Message.Type.UPDATE));
+                }).doOnSuccess(news -> newsWebSocketHandler.publishNews(news, Message.Type.LIKE));
     }
 
     public Flux<News> findByAuthorId(String authorId) {
@@ -114,4 +114,6 @@ public class NewsService extends AbstractSuperService<News> {
     public Mono<News> findById(String newsId){
         return newsRepo.findByIdAndDeletedAtIsNull(newsId);
     }
+
+
 }

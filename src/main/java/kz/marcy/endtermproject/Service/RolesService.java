@@ -60,8 +60,8 @@ public class RolesService extends AbstractSuperService<Roles> {
     }
 
     @Override
-    public void saveEntity(Roles entity) {
-        rolesRepo.save(entity).subscribe(); // Save the entity reactively
+    public Mono<Roles> saveEntity(Roles entity) {
+        return rolesRepo.save(entity);// Save the entity reactively
     }
 
 

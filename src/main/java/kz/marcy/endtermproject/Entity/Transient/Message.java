@@ -19,6 +19,13 @@ public class Message {
         public static final String UPDATE = "UPDATE";
         public static final String DELETE = "DELETE";
         public static final String BATCH = "BATCH"; // Ненужная
+        public static final String ERROR = "ERROR";
+        public static final String LIKE = "LIKE";
+        public static final String ADD_COMMENT = "ADD_COMMENT";
+        public static final String DELETE_COMMENT = "DELETE_COMMENT";
+        public static final String FRIEND_REQUEST = "FRIEND_REQUEST";
+        public static final String FRIEND_REQUEST_ACCEPTED = "FRIEND_REQUEST_ACCEPTED";
+        public static final String FRIEND_REQUEST_REJECTED = "FRIEND_REQUEST_REJECTED";
 
     }
 }

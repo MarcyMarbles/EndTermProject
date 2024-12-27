@@ -4,6 +4,7 @@ import kz.marcy.endtermproject.Entity.Comments;
 import kz.marcy.endtermproject.Entity.News;
 import kz.marcy.endtermproject.Entity.Transient.NewsPostDTO;
 import kz.marcy.endtermproject.Entity.Transient.PageWrapper;
+import kz.marcy.endtermproject.Service.CommentsService;
 import kz.marcy.endtermproject.Service.NewsService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,9 +18,11 @@ import java.util.List;
 public class NewsController {
 
     private final NewsService newsService;
+    private final CommentsService commentsService;
 
-    public NewsController(NewsService newsService) {
+    public NewsController(NewsService newsService, CommentsService commentsService) {
         this.newsService = newsService;
+        this.commentsService = commentsService;
     }
 
     @GetMapping("/news")
@@ -69,27 +72,26 @@ public class NewsController {
                 .defaultIfEmpty(ResponseEntity.badRequest().body(null));
     }
 
-/*
     @GetMapping("/news/{newsId}/comments")
     public Mono<ResponseEntity<List<Comments>>> getComments(@PathVariable String newsId) {
         if (newsId == null) {
             return Mono.just(ResponseEntity.badRequest().body(null));
         }
-        return newsService.getComments(newsId)
+        return commentsService.findByNewsId(newsId)
                 .collectList()
                 .map(comments -> comments.isEmpty()
                         ? ResponseEntity.noContent().build()
                         : ResponseEntity.ok(comments));
     }
 
-    @PostMapping("/news/{newsId}/comment")
+    @PostMapping("/news/{newsId}/comment/post")
     public Mono<ResponseEntity<Comments>> addComment(@RequestHeader("userId") String userId,
                                                      @PathVariable String newsId,
                                                      @RequestBody Comments comment) {
         if (newsId == null || userId == null || comment == null || comment.getContent() == null) {
             return Mono.just(ResponseEntity.badRequest().body(null));
         }
-        return newsService.addComment(newsId, userId, comment)
+        return commentsService.addComment(comment)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.badRequest().body(null));
     }
@@ -101,11 +103,10 @@ public class NewsController {
         if (newsId == null || userId == null || commentId == null) {
             return Mono.just(ResponseEntity.badRequest().body(null));
         }
-        return newsService.deleteComment(newsId, userId, commentId)
+        return commentsService.deleteComment(commentId)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.badRequest().body(null));
     }
-*/
 
     @GetMapping("/news/{authorId}")
     public Mono<ResponseEntity<List<News>>> getNewsByAuthor(@PathVariable String authorId) {
