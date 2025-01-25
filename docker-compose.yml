@@ -1,0 +1,29 @@
+version: "3.9"
+name: spring-boot-app
+services:
+  mongo:
+    image: mongo
+    container_name: mgNoSQL
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongovolume:/data/db
+
+  spring-boot-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - mongo
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mgNoSQL:27017/mydatabase
+      JWT_SECRET: P6Zq4R41P28xo9QfO2A690noJnOdCzHdz6kxNVmnXGU=
+      EMAIL_USERNAME: plsdont
+      EMAIL_PASSWORD: plsdont
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./uploads:/app/uploads
+
+volumes:
+  mongovolume:
