@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-boot-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spring-boot-app
+  template:
+    metadata:
+      labels:
+        app: spring-boot-app
+    spec:
+      containers:
+        - name: spring-boot-app
+          image: marcytt/endtermproject:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_DATA_MONGODB_URI
+              value: mongodb://mongo:27017/mydatabase
+            - name: JWT_SECRET
+              value: P6Zq4R41P28xo9QfO2A690noJnOdCzHdz6kxNVmnXGU=
+            - name: EMAIL_USERNAME
+              value: plsdont
+            - name: EMAIL_PASSWORD
+              value: plsdont
+          volumeMounts:
+            - name: app-uploads
+              mountPath: /app/uploads
+      volumes:
+        - name: app-uploads
+          persistentVolumeClaim:
+            claimName: uploads-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spring-boot-app
+spec:
+  selector:
+    app: spring-boot-app
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: uploads-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
