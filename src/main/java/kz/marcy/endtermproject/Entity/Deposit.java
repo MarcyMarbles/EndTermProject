@@ -15,3 +15,4 @@ public class Deposit extends AbstractSuperClass{
     private String currency; // Валюта депозита
     private boolean isActive; // Активен ли депозит
 }
+

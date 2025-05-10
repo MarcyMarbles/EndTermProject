@@ -14,3 +14,4 @@ public class Balance extends AbstractSuperClass{
     private BigDecimal balance; // Баланс юзера
     private String currency; // Валюта
 }
+

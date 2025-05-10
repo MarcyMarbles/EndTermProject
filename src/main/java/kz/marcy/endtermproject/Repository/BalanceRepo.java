@@ -17,4 +17,6 @@ public interface BalanceRepo extends ReactiveMongoRepository<Balance, String> {
     Flux<Balance> findByOwnerIdAndCurrency(String ownerId, String currency); // Метод для поиска баланса по ID владельца и валюте
     
     Flux<Balance> findByOwnerIdInAndCurrency(List<String> ownerIds, String currency); // Метод для поиска баланса по списку ID владельцев и валюте
+
+
 }

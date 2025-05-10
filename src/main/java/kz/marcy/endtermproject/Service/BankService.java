@@ -74,11 +74,12 @@ public class BankService extends AbstractSuperService<Bank> {
                 });
     }
 
-    public Mono<Bank> addNewDeposit(String bankId, Deposit deposit) {
+    public Mono<Deposit> addNewDeposit(String bankId, Deposit deposit) {
         return bankRepo.findById(bankId)
                 .flatMap(bank -> {
                     bank.getDeposit().add(deposit);
-                    return saveEntity(bank);
+                    return saveEntity(bank)
+                            .then(Mono.just(deposit));
                 });
     }
 
@@ -95,7 +96,7 @@ public class BankService extends AbstractSuperService<Bank> {
                 });
     }
 
-    public Mono<Bank> addBalanceToDeposit(String bankId, String depositId, BigDecimal amount) {
+    public Mono<Deposit> addBalanceToDeposit(String bankId, String depositId, BigDecimal amount) {
         if (amount.compareTo(BigDecimal.ZERO) < 0) {
             return Mono.error(new IllegalArgumentException("Amount must be positive"));
         }
@@ -104,14 +105,15 @@ public class BankService extends AbstractSuperService<Bank> {
                     Deposit deposit = findDepositById(bank, depositId);
                     if (deposit != null) {
                         deposit.setAmount(deposit.getAmount().add(amount));
-                        return saveEntity(bank);
+                        return saveEntity(bank)
+                                .then(Mono.just(deposit));
                     } else {
                         return Mono.empty();
                     }
                 });
     }
 
-    public Mono<Bank> subtractBalanceFromDeposit(String bankId, String depositId, BigDecimal amount) {
+    public Mono<Deposit> subtractBalanceFromDeposit(String bankId, String depositId, BigDecimal amount) {
         if (amount.compareTo(BigDecimal.ZERO) < 0) {
             return Mono.error(new IllegalArgumentException("Amount must be positive"));
         }
@@ -120,7 +122,26 @@ public class BankService extends AbstractSuperService<Bank> {
                     Deposit deposit = findDepositById(bank, depositId);
                     if (deposit != null) {
                         deposit.setAmount(deposit.getAmount().subtract(amount));
-                        return saveEntity(bank);
+                        return saveEntity(bank)
+                                .then(Mono.just(deposit));
+                    } else {
+                        return Mono.empty();
+                    }
+                });
+    }
+
+    public Flux<Deposit> getDepositsByBankId(String bankId) {
+        return bankRepo.findById(bankId)
+                .flatMapMany(bank -> Flux.fromIterable(bank.getDeposit())
+                        .filter(deposit -> deposit.getDeletedAt() == null)); // Get deposits by bank ID
+    }
+
+    public Mono<Deposit> getDepositById(String bankId, String depositId) {
+        return bankRepo.findById(bankId)
+                .flatMap(bank -> {
+                    Deposit deposit = findDepositById(bank, depositId);
+                    if (deposit != null) {
+                        return Mono.just(deposit);
                     } else {
                         return Mono.empty();
                     }
