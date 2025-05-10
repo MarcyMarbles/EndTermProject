@@ -42,21 +42,9 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
-    testImplementation 'io.projectreactor:reactor-test'
-    testImplementation 'org.springframework.security:spring-security-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    testImplementation 'org.mockito:mockito-core'
-    testImplementation 'org.mockito:mockito-junit-jupiter'
-    testImplementation('org.springframework.boot:spring-boot-starter-test') {
-        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
-    }
     implementation('org.springframework.boot:spring-boot-starter-webflux') {
         exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
     }
-}
-
-tasks.withType(Test) {
-    useJUnitPlatform()
 }
 
 bootRun {

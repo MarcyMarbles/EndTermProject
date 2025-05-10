@@ -32,12 +32,12 @@ public class CommentsService extends AbstractSuperService<Comments> {
         return commentsRepo.save(entity);
     }
 
-    public void softDelete(Comments entity) {
-        super.softDelete(entity);
+    public Mono<Comments> softDelete(Comments entity) {
+        return super.softDelete(entity);
     }
 
-    public void softDelete(Iterable<Comments> entities) {
-        super.softDelete(entities);
+    public Flux<Comments> softDelete(Iterable<Comments> entities) {
+        return super.softDeleteAll(entities);
     }
 
     public Flux<Comments> findAll(PageWrapper pageWrapper) {

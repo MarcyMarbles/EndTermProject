@@ -40,16 +40,17 @@ public class NewsService extends AbstractSuperService<News> {
     }
 
     @Override
-    public void softDelete(News entity) {
-        super.softDelete(entity);
-        newsWebSocketHandler.publishNews(entity, Message.Type.DELETE);
+    public Mono<News> softDelete(News entity) {
+        return super.softDelete(entity)
+                .doOnSuccess(news -> newsWebSocketHandler.publishNews(news, Message.Type.DELETE));
     }
 
     @Override
-    public void softDelete(Iterable<News> entities) {
-        super.softDelete(entities);
-        entities.forEach(users -> newsWebSocketHandler.publishNews(users, Message.Type.DELETE));
+    public Flux<News> softDeleteAll(Iterable<News> entities) {
+        return super.softDeleteAll(entities)
+                .doOnNext(news -> newsWebSocketHandler.publishNews(news, Message.Type.DELETE));
     }
+
 
     public Flux<News> findAll(PageWrapper pageWrapper) {
         return newsRepo.findAll()
@@ -111,7 +112,7 @@ public class NewsService extends AbstractSuperService<News> {
         return newsRepo.findByAuthorIdAndDeletedAtIsNull(authorId);
     }
 
-    public Mono<News> findById(String newsId){
+    public Mono<News> findById(String newsId) {
         return newsRepo.findByIdAndDeletedAtIsNull(newsId);
     }
 

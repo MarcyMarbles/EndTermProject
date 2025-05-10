@@ -64,11 +64,11 @@ public class UserService extends AbstractSuperService<Users> {
                     if (user.getPassword() != null && !user.getPassword().isEmpty()) {
                         existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
                     }
-                    if(user.getAvatar() != null) {
+                    if (user.getAvatar() != null) {
                         existingUser.setAvatar(user.getAvatar());
                     }
                     // Temp email is not changeable
-                    if(user.getUsername() != null && !user.getUsername().isEmpty()) {
+                    if (user.getUsername() != null && !user.getUsername().isEmpty()) {
                         existingUser.setUsername(user.getUsername());
                     }
                     return userRepo.save(existingUser);
@@ -81,18 +81,17 @@ public class UserService extends AbstractSuperService<Users> {
     }
 
     @Override
-    public void softDelete(Users entity) {
-        super.softDelete(entity);
-        userWebSocketHandler.publishUser(entity, Message.Type.DELETE);
+    public Mono<Users> softDelete(Users entity) {
+        return super.softDelete(entity)
+                .doOnSuccess(users -> userWebSocketHandler.publishUser(users, Message.Type.DELETE));
     }
 
     @Override
-    public void softDelete(Iterable<Users> entities) {
-        super.softDelete(entities);
-        entities.forEach(users -> {
-            userWebSocketHandler.publishUser(users, Message.Type.DELETE);
-        });
+    public Flux<Users> softDeleteAll(Iterable<Users> entities) {
+        return super.softDeleteAll(entities)
+                .doOnNext(users -> userWebSocketHandler.publishUser(users, Message.Type.DELETE));
     }
+
 
     public Flux<Users> findAll(PageWrapper page) {
         return userRepo.findAll()
@@ -133,16 +132,16 @@ public class UserService extends AbstractSuperService<Users> {
 
     public Mono<Void> deleteUser(String id) {
         return userRepo.findByIdAndDeletedAtIsNull(id)
-                .switchIfEmpty(Mono.error(new RuntimeException("User not found or already deleted")))
-                .flatMap(user -> Mono.fromRunnable(() -> softDelete(user)))
+                .flatMap(this::softDelete)
                 .then();
     }
+
 
     public Mono<Users> getUserByLogin(String login) {
         return userRepo.findByLoginAndDeletedAtIsNull(login);
     }
 
-    public Mono<Users> getUserById(String id){
+    public Mono<Users> getUserById(String id) {
         return userRepo.findByIdAndDeletedAtIsNull(id);
     }
 
@@ -166,12 +165,12 @@ public class UserService extends AbstractSuperService<Users> {
         return userRepo.findByUsernameAndDeletedAtIsNull(username);
     }
 
-    public Flux<Users> findUsersWithAlikeUsername(String username){
+    public Flux<Users> findUsersWithAlikeUsername(String username) {
         return userRepo.findByUsernameIsLikeIgnoreCaseAndDeletedAtIsNull(username);
     }
 
     public Mono<Users> findByToken(String token) {
-        if(token == null) {
+        if (token == null) {
             return Mono.empty();
         }
         return Mono.just(jwtUtils.extractLogin(token))
