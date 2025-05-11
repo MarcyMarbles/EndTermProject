@@ -1,5 +1,13 @@
-docker build -t marcytt/EndTermProj:latest .
+@echo off
+echo [1/3] Cleaning project...
+call .\gradlew clean
 
-docker login
+echo [2/3] Building bootJar...
+call .\gradlew bootJar
 
-docker push marcytt/EndTermProj:latest
+echo [3/3] Deploying Docker containers...
+docker-compose down
+docker-compose up --build -d
+
+echo Deployment complete.
+pause

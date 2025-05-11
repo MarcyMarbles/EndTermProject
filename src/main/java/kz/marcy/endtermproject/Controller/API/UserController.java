@@ -40,6 +40,8 @@ public class UserController {
         return userService.findAll(PageWrapper.of(page, size));
     }
 
+    public boolean EMAIL_VERIFICATION = false; // In future set in property or in db config
+
     @PostMapping("/register")
     public Mono<ResponseEntity<String>> addUser(@RequestBody Users user) {
         if (user == null || user.getUsername() == null || user.getPassword() == null) {
@@ -52,14 +54,16 @@ public class UserController {
                         return Mono.just(ResponseEntity.badRequest().body("Role 'ROLE_USER' not found. Contact admin."));
                     }
                     user.setRoles(role);
-                    user.setPending(true);
-                    /*return pendingService.createPendingCode(user)
-                            .flatMap(_ -> userService.saveUser(user)
-                                    .then(Mono.just(ResponseEntity.ok("User registered successfully. Please confirm your email"))));*/
-                    // Reverse since we need to save user first
+                    user.setPending(EMAIL_VERIFICATION);
                     return userService.saveUser(user)
-                            .flatMap(savedUser -> pendingService.createPendingCode(savedUser)
-                                    .then(Mono.just(ResponseEntity.ok("User registered successfully. Please confirm your email"))));
+                            .flatMap(savedUser -> {
+                                if (EMAIL_VERIFICATION) {
+                                    return pendingService.createPendingCode(savedUser)
+                                            .then(Mono.just(ResponseEntity.ok("User registered successfully. Please confirm your email")));
+                                } else {
+                                    return Mono.just(ResponseEntity.ok("User registered successfully"));
+                                }
+                            });
 
                 })
                 .defaultIfEmpty(ResponseEntity.badRequest().body("Role not found"));
