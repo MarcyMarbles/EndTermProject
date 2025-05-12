@@ -225,7 +225,7 @@ public class BankController {
                                         transaction.setBankId(bank.getId());
                                         transaction.setDepositId(updatedDeposit.getId());
                                         transaction.setAmount(amount);
-                                        transaction.setTransactionType("deposit_income");
+                                        transaction.setTransactionType("income");
                                         transaction.setCurrency(updatedDeposit.getCurrency());
                                         return transactionService.saveEntity(transaction)
                                                 .thenReturn(ResponseEntity.ok(updatedDeposit));
