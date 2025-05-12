@@ -14,7 +14,7 @@ import java.util.List;
 public class Bank extends AbstractSuperClass{
     private String name;
     private String ownerId; // ID юзера, который создал банк
-    private BigDecimal balance; // Баланс юзера
+    private BigDecimal balance = new BigDecimal(0); // Баланс юзера
     private String currency; // Валюта банка
     private List<Deposit> deposit = new ArrayList<>(); // Депозиты юзера
 }
