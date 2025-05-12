@@ -1,22 +1,49 @@
 package kz.marcy.endtermproject.Entity;
 
+import lombok.Getter;
+
+import java.util.List;
+
+@Getter
 public enum LoanType {
-    GIVE("GIVE"), // Дал кому либо
-    TAKE("TAKE"); // Взял у кого либо
+    GIVE(List.of("Gave to", "Одолжил")),
+    TAKE(List.of("Took from", "Занял у"));
 
-    private final String value;
+    private final List<String> aliases;
 
-    LoanType(String value) {
-        this.value = value;
+    LoanType(List<String> aliases) {
+        this.aliases = aliases;
     }
 
-    public static LoanType fromValue(String value) {
+    public static LoanType fromValue(String input) {
+        if (input == null || input.trim().isEmpty()) {
+            throw new IllegalArgumentException("Loan type input cannot be null or empty");
+        }
+
+        String lowerInput = input.toLowerCase();
+
         for (LoanType type : LoanType.values()) {
-            if (type.value.equalsIgnoreCase(value)) {
-                return type;
+            for (String alias : type.aliases) {
+                if (alias.equalsIgnoreCase(input)) {
+                    return type;
+                }
             }
         }
-        throw new IllegalArgumentException("Unknown loan type: " + value);
+
+        for (LoanType type : LoanType.values()) {
+            for (String alias : type.aliases) {
+                if (alias.toLowerCase().contains(lowerInput)) {
+                    return type;
+                }
+            }
+        }
+
+        throw new IllegalArgumentException("Unknown loan type: " + input);
     }
-    
+
+    public String getLabel() {
+        return aliases.get(1); // или выбрать по языку позже
+    }
+
 }
+

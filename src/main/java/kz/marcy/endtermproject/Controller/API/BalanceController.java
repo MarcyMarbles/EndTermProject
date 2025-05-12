@@ -2,6 +2,8 @@ package kz.marcy.endtermproject.Controller.API;
 
 import kz.marcy.endtermproject.Entity.Balance;
 import kz.marcy.endtermproject.Entity.AbstractSuperClass;
+import kz.marcy.endtermproject.Service.BalanceForecastDto;
+import kz.marcy.endtermproject.Service.BalanceService;
 import kz.marcy.endtermproject.Service.UserService;
 import kz.marcy.endtermproject.Repository.BalanceRepo;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/balance")
@@ -19,6 +22,7 @@ public class BalanceController {
 
     private final BalanceRepo balanceRepo;
     private final UserService userService;
+    private final BalanceService balanceService;
 
     private Mono<String> getCurrentUserId() {
         return ReactiveSecurityContextHolder.getContext()
@@ -30,7 +34,7 @@ public class BalanceController {
     @GetMapping
     public Mono<ResponseEntity<Balance>> getMyBalance() {
         return getCurrentUserId()
-                .flatMap(ownerId -> balanceRepo.findByOwnerId(ownerId).next()
+                .flatMap(ownerId -> balanceRepo.findByOwnerId(ownerId)
                         .map(ResponseEntity::ok)
                         .defaultIfEmpty(ResponseEntity.notFound().build()));
     }
@@ -38,9 +42,9 @@ public class BalanceController {
     @PostMapping
     public Mono<ResponseEntity<Balance>> createBalance(@RequestBody Balance balance) {
         return getCurrentUserId()
-                .flatMap(ownerId -> balanceRepo.findByOwnerId(ownerId).hasElements()
+                .flatMap(ownerId -> balanceRepo.findByOwnerId(ownerId)
                         .flatMap(exists -> {
-                            if (exists) {
+                            if (exists != null) {
                                 return Mono.just(ResponseEntity.status(409).body(null)); // 409 Conflict
                             }
                             balance.setOwnerId(ownerId);
@@ -55,7 +59,7 @@ public class BalanceController {
         }
 
         return getCurrentUserId()
-                .flatMap(ownerId -> balanceRepo.findByOwnerId(ownerId).next()
+                .flatMap(ownerId -> balanceRepo.findByOwnerId(ownerId)
                         .flatMap(balance -> {
                             balance.setBalance(balance.getBalance().add(amount));
                             return balanceRepo.save(balance).map(ResponseEntity::ok);
@@ -70,7 +74,7 @@ public class BalanceController {
         }
 
         return getCurrentUserId()
-                .flatMap(ownerId -> balanceRepo.findByOwnerId(ownerId).next()
+                .flatMap(ownerId -> balanceRepo.findByOwnerId(ownerId)
                         .flatMap(balance -> {
                             if (balance.getBalance().compareTo(amount) < 0) {
                                 return Mono.just(ResponseEntity.badRequest()
@@ -85,9 +89,20 @@ public class BalanceController {
     @DeleteMapping
     public Mono<ResponseEntity<Object>> deleteMyBalance() {
         return getCurrentUserId()
-                .flatMap(ownerId -> balanceRepo.findByOwnerId(ownerId).next()
+                .flatMap(ownerId -> balanceRepo.findByOwnerId(ownerId)
                         .flatMap(balance -> balanceRepo.deleteById(balance.getId())
                                 .thenReturn(ResponseEntity.noContent().build()))
                         .defaultIfEmpty(ResponseEntity.notFound().build()));
     }
+
+
+    @GetMapping("/count-up-to/{date}")
+    public Mono<ResponseEntity<BalanceForecastDto>> countUpToDate(@PathVariable String date) {
+        LocalDate parsedDate = LocalDate.parse(date);
+        return getCurrentUserId()
+                .flatMap(userId -> balanceService.countToDate(userId, parsedDate)
+                        .map(ResponseEntity::ok)
+                        .defaultIfEmpty(ResponseEntity.notFound().build()));
+    }
+
 }
