@@ -14,6 +14,7 @@ public class Transactions extends AbstractSuperClass {
     private String balanceId;
     private String depositId;
     private String userId;
+    private BigDecimal initialAmount = new BigDecimal(0);
     private BigDecimal amount = new BigDecimal(0);
     private String currency;
     private String transactionType; // income, expense

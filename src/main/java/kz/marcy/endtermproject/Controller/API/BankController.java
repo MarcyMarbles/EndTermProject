@@ -80,7 +80,7 @@ public class BankController {
 
     @PatchMapping("/{id}/add-balance")
     public Mono<ResponseEntity<?>> addBalance(@PathVariable String id,
-                                                 @RequestParam BigDecimal amount) {
+                                              @RequestParam BigDecimal amount) {
         if (amount.compareTo(BigDecimal.ZERO) < 0) {
             return Mono.just(ResponseEntity.badRequest().build());
         }
@@ -97,6 +97,7 @@ public class BankController {
                                         transaction.setBankId(updatedBank.getId());
                                         transaction.setAmount(amount);
                                         transaction.setTransactionType("income");
+                                        transaction.setInitialAmount(bank.getBalance()); // Берём начальную сумму до изменения
                                         transaction.setCurrency(updatedBank.getCurrency());
                                         return transactionService.saveEntity(transaction)
                                                 .thenReturn(ResponseEntity.ok(updatedBank));
@@ -108,7 +109,7 @@ public class BankController {
 
     @PatchMapping("/{id}/subtract-balance")
     public Mono<ResponseEntity<?>> subtractBalance(@PathVariable String id,
-                                                      @RequestParam BigDecimal amount) {
+                                                   @RequestParam BigDecimal amount) {
         if (amount.compareTo(BigDecimal.ZERO) < 0) {
             return Mono.just(ResponseEntity.badRequest().build());
         }
@@ -128,6 +129,7 @@ public class BankController {
                                         transaction.setBankId(updatedBank.getId());
                                         transaction.setAmount(amount);
                                         transaction.setTransactionType("expense");
+                                        transaction.setInitialAmount(bank.getBalance());
                                         transaction.setCurrency(updatedBank.getCurrency());
                                         return transactionService.saveEntity(transaction)
                                                 .thenReturn(ResponseEntity.ok(updatedBank));
@@ -139,7 +141,7 @@ public class BankController {
 
     @PatchMapping("/{id}/add-deposit")
     public Mono<ResponseEntity<?>> addDeposit(@PathVariable String id,
-                                                    @RequestBody Deposit deposit) {
+                                              @RequestBody Deposit deposit) {
         return getCurrentUserId()
                 .flatMap(userId -> bankService.getBankById(id)
                         .flatMap(bank -> {
@@ -165,7 +167,7 @@ public class BankController {
 
     @DeleteMapping("/{id}/delete-deposit/{depositId}")
     public Mono<ResponseEntity<Object>> deleteDeposit(@PathVariable String id,
-                                                    @PathVariable String depositId) {
+                                                      @PathVariable String depositId) {
         return getCurrentUserId()
                 .flatMap(userId -> bankService.getBankById(id)
                         .flatMap(bank -> {
@@ -190,7 +192,7 @@ public class BankController {
 
     @GetMapping("/{id}/deposits/{depositId}")
     public Mono<ResponseEntity<?>> getDeposit(@PathVariable String id,
-                                                    @PathVariable String depositId) {
+                                              @PathVariable String depositId) {
         return getCurrentUserId()
                 .flatMap(userId -> bankService.getBankById(id)
                         .flatMap(bank -> {
@@ -207,8 +209,8 @@ public class BankController {
 
     @PatchMapping("/{id}/deposits/add-balance/{depositId}")
     public Mono<ResponseEntity<?>> addDepositBalance(@PathVariable String id,
-                                                           @PathVariable String depositId,
-                                                           @RequestParam BigDecimal amount) {
+                                                     @PathVariable String depositId,
+                                                     @RequestParam BigDecimal amount) {
         if (amount.compareTo(BigDecimal.ZERO) < 0) {
             return Mono.just(ResponseEntity.badRequest().build());
         }
@@ -226,6 +228,7 @@ public class BankController {
                                         transaction.setDepositId(updatedDeposit.getId());
                                         transaction.setAmount(amount);
                                         transaction.setTransactionType("income");
+                                        transaction.setInitialAmount(updatedDeposit.getAmount().subtract(amount)); // Берём начальную сумму до изменения
                                         transaction.setCurrency(updatedDeposit.getCurrency());
                                         return transactionService.saveEntity(transaction)
                                                 .thenReturn(ResponseEntity.ok(updatedDeposit));

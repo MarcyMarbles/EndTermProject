@@ -75,9 +75,10 @@ public class BalanceController {
                 .flatMap(ownerId ->
                         balanceRepo.findByOwnerId(ownerId)
                                 .flatMap(balance -> {
+                                    Transactions tx = new Transactions();
+                                    tx.setInitialAmount(balance.getBalance());
                                     balance.setBalance(balance.getBalance().add(amount));
 
-                                    Transactions tx = new Transactions();
                                     tx.setUserId(ownerId);
                                     tx.setBalanceId(balance.getId());
                                     tx.setAmount(amount);
@@ -105,9 +106,10 @@ public class BalanceController {
                                     if (balance.getBalance().compareTo(amount) < 0) {
                                         return Mono.just(ResponseEntity.badRequest().build());
                                     }
+                                    Transactions tx = new Transactions();
+                                    tx.setInitialAmount(balance.getBalance());
                                     balance.setBalance(balance.getBalance().subtract(amount));
 
-                                    Transactions tx = new Transactions();
                                     tx.setUserId(ownerId);
                                     tx.setBalanceId(balance.getId());
                                     tx.setAmount(amount);
