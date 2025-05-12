@@ -5,12 +5,12 @@ import kz.marcy.endtermproject.Entity.Transactions;
 import kz.marcy.endtermproject.Service.TransactionService;
 import kz.marcy.endtermproject.Service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/transaction")
@@ -27,54 +27,24 @@ public class TransactionController {
                 .map(AbstractSuperClass::getId);
     }
 
-    /**
-     * Все транзакции пользователя
-     */
+    /** Все транзакции пользователя */
     @GetMapping("/all")
-    public Mono<ResponseEntity<List<Transactions>>> getAllTransactions() {
+    public Flux<Transactions> getAllTransactions() {
         return getCurrentUserId()
-                .flatMap(userId ->
-                        transactionService.findByUserId(userId)
-                                .collectList()
-                                .map(list ->
-                                        list.isEmpty()
-                                                ? ResponseEntity.notFound().build()
-                                                : ResponseEntity.ok(list)
-                                )
-                );
+                .flatMapMany(transactionService::findByUserId);
     }
 
-    /**
-     * Только входящие (income)
-     */
+    /** Только входящие (income) */
     @GetMapping("/deposit")
-    public Mono<ResponseEntity<List<Transactions>>> getDepositTransactions() {
+    public Flux<Transactions> getDepositTransactions() {
         return getCurrentUserId()
-                .flatMap(userId ->
-                        transactionService.findByUserIdAndType(userId, "income")
-                                .collectList()
-                                .map(list ->
-                                        list.isEmpty()
-                                                ? ResponseEntity.notFound().build()
-                                                : ResponseEntity.ok(list)
-                                )
-                );
+                .flatMapMany(id -> transactionService.findByUserIdAndType(id, "income"));
     }
 
-    /**
-     * Только исходящие (expense)
-     */
+    /** Только исходящие (expense) */
     @GetMapping("/withdraw")
-    public Mono<ResponseEntity<List<Transactions>>> getWithdrawTransactions() {
+    public Flux<Transactions> getWithdrawTransactions() {
         return getCurrentUserId()
-                .flatMap(userId ->
-                        transactionService.findByUserIdAndType(userId, "expense")
-                                .collectList()
-                                .map(list ->
-                                        list.isEmpty()
-                                                ? ResponseEntity.notFound().build()
-                                                : ResponseEntity.ok(list)
-                                )
-                );
+                .flatMapMany(id -> transactionService.findByUserIdAndType(id, "expense"));
     }
 }
